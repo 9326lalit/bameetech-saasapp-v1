@@ -1,0 +1,36 @@
+{
+  "name": "bamee-dashboard",
+  "version": "1.0.0",
+  "description": "A subscription-based lead management system for BameeTech",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd server && npm start",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "install:all": "npm install && npm run install:server && npm run install:client",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build": "npm run build:client && npm run build:server",
+    "test": "concurrently \"cd server && npm test\" \"cd client && npm test\"",
+    "lint": "concurrently \"cd server && npm run lint\" \"cd client && npm run lint\"",
+    "prepare-deploy": "npm run build && npm run test"
+  },
+  "keywords": [
+    "dashboard",
+    "subscription",
+    "lead-management",
+    "razorpay",
+    "saas"
+  ],
+  "author": "BameeTech",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
