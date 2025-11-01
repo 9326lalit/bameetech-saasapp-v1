@@ -9,7 +9,7 @@ router.get('/super-admin/users', verifyToken, isSuperAdmin, getAllUsers);
 router.get('/super-admin/dashboard', verifyToken, isSuperAdmin, getDashboardStats);
 
 // Keep old routes for backward compatibility
-router.get('/admin/users', verifyToken, isSuperAdmin, getAllUsers);
-router.get('/admin/dashboard', verifyToken, isSuperAdmin, getDashboardStats);
+// router.get('/admin/users', verifyToken, isSuperAdmin, getAllUsers);
+// router.get('/admin/dashboard', verifyToken, isSuperAdmin, getDashboardStats);
 
 module.exports = router;

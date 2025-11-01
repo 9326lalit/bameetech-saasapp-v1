@@ -26,7 +26,7 @@ const Payment = sequelize.define('Payment', {
     type: DataTypes.STRING,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'completed', 'failed'),
+    type: DataTypes.STRING(50), // ✅ ENUM काढून टाकलं, आता Razorpay चे सर्व values save होतील
     defaultValue: 'pending',
   },
   paymentDate: {

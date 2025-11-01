@@ -6,7 +6,7 @@ const createDemoLeadDatabases = async () => {
     // Check if demo databases already exist
     const existingDatabases = await LeadDatabase.findAll();
     if (existingDatabases.length > 0) {
-      console.log('Demo lead databases already exist');
+      // console.log('Demo lead databases already exist');
       return;
     }
     
@@ -73,10 +73,10 @@ const createDemoLeadDatabases = async () => {
     
     for (const dbData of demoDatabases) {
       await LeadDatabase.create(dbData);
-      console.log(`Created demo database: ${dbData.name}`);
+      // console.log(`Created demo database: ${dbData.name}`);
     }
     
-    console.log('Demo lead databases created successfully');
+    // console.log('Demo lead databases created successfully');
     
   } catch (error) {
     console.error('Error creating demo lead databases:', error);

@@ -1,0 +1,4 @@
+Date,Category,Amount,Remaining Balance
+24-Sep,Food,0,2000
+25-Sep,Travel,0,=D2-C3
+26-Sep,Other,0,=D3-C4

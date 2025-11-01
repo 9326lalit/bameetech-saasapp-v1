@@ -1,12 +1,23 @@
 const { Plan, LeadDatabase } = require('../models');
 
+
+
+const Razorpay = require('razorpay');
+require('dotenv').config();
+
+// Initialize Razorpay instance
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
 const createPlan = async (req, res) => {
   try {
     const { 
       name, 
       description, 
-      price, 
-      duration, 
+      price, // assume in INR
+      duration, // in months
       features, 
       leadDatabaseId,
       leadLimit,
@@ -24,7 +35,8 @@ const createPlan = async (req, res) => {
         mimetype: file.mimetype
       }));
     }
-    
+
+    // 1️⃣ First, create in DB
     const plan = await Plan.create({
       name,
       description,
@@ -36,15 +48,81 @@ const createPlan = async (req, res) => {
       htmlContent: htmlContent || null,
       documents
     });
-    
+
+    // 2️⃣ Then, create Razorpay plan
+    const razorpayPlan = await razorpay.plans.create({
+      period: 'monthly', // या वेळी dynamic बनवू शकता duration check करून
+      interval: duration || 1,
+      item: {
+        name,
+        amount: price * 100, // ₹100 = 100 paisa
+        currency: 'INR',
+        description
+      }
+    });
+
+    // 3️⃣ Save Razorpay plan ID to DB
+    plan.razorpayPlanId = razorpayPlan.id;
+    await plan.save();
+
     res.status(201).json({
       message: 'Plan created successfully',
       plan,
+      razorpayPlan
     });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Error creating plan', error: error.message });
   }
 };
+
+
+// const createPlan = async (req, res) => {
+//   try {
+//     const { 
+//       name, 
+//       description, 
+//       price, 
+//       duration, 
+//       features, 
+//       leadDatabaseId,
+//       leadLimit,
+//       htmlContent 
+//     } = req.body;
+    
+//     // Handle uploaded documents
+//     let documents = [];
+//     if (req.files && req.files.length > 0) {
+//       documents = req.files.map(file => ({
+//         originalName: file.originalname,
+//         filename: file.filename,
+//         path: file.path,
+//         size: file.size,
+//         mimetype: file.mimetype
+//       }));
+//     }
+    
+//     const plan = await Plan.create({
+//       name,
+//       description,
+//       price,
+//       duration,
+//       features,
+//       leadDatabaseId: leadDatabaseId || null,
+//       leadLimit: leadLimit || null,
+//       htmlContent: htmlContent || null,
+//       documents
+//     });
+    
+//     res.status(201).json({
+//       message: 'Plan created successfully',
+//       plan,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error creating plan', error: error.message });
+//   }
+// };
 
 const getAllPlans = async (req, res) => {
   try {

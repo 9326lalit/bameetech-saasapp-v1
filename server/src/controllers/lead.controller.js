@@ -33,40 +33,40 @@ const getUserLeads = async (req, res) => {
     
     // For demo purposes, return mock leads based on the plan
     // In production, you would connect to the actual database specified in LeadDatabase
-    const mockLeads = generateMockLeads(activeSubscription.Plan);
+    // const mockLeads = generateMockLeads(activeSubscription.Plan);
     
-    res.status(200).json(mockLeads);
+    res.status(200).json("leads not found for this plan ...please contact to company!!!");
   } catch (error) {
     res.status(500).json({ message: 'Error fetching leads', error: error.message });
   }
 };
 
 // Helper function to generate mock leads based on plan
-const generateMockLeads = (plan) => {
-  const leadDatabase = plan.LeadDatabase;
-  const leadLimit = plan.leadLimit || 50; // Default to 50 if no limit set
+// const generateMockLeads = (plan) => {
+//   const leadDatabase = plan.LeadDatabase;
+//   const leadLimit = plan.leadLimit || 50; // Default to 50 if no limit set
   
-  const mockLeads = [];
-  const businessTypes = ['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufacturing', 'Education', 'Real Estate'];
-  const statuses = ['new', 'contacted', 'qualified', 'closed'];
+//   const mockLeads = [];
+//   const businessTypes = ['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufacturing', 'Education', 'Real Estate'];
+//   const statuses = ['new', 'contacted', 'qualified', 'closed'];
   
-  for (let i = 1; i <= Math.min(leadLimit, 50); i++) {
-    mockLeads.push({
-      id: i,
-      name: `Lead ${i} - ${leadDatabase.name}`,
-      email: `lead${i}@example.com`,
-      mobile: `+91 ${9000000000 + i}`,
-      website: `https://company${i}.com`,
-      business: businessTypes[i % businessTypes.length],
-      company: `Company ${i}`,
-      status: statuses[i % statuses.length],
-      source: leadDatabase.name,
-      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // Random date within last 30 days
-    });
-  }
+//   for (let i = 1; i <= Math.min(leadLimit, 50); i++) {
+//     mockLeads.push({
+//       id: i,
+//       name: `Lead ${i} - ${leadDatabase.name}`,
+//       email: `lead${i}@example.com`,
+//       mobile: `+91 ${9000000000 + i}`,
+//       website: `https://company${i}.com`,
+//       business: businessTypes[i % businessTypes.length],
+//       company: `Company ${i}`,
+//       status: statuses[i % statuses.length],
+//       source: leadDatabase.name,
+//       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // Random date within last 30 days
+//     });
+//   }
   
-  return mockLeads;
-};
+//   return mockLeads;
+// };
 
 const getAdminLeads = async (req, res) => {
   try {

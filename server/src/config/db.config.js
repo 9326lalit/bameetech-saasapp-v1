@@ -11,7 +11,7 @@
 // const testConnection = async () => {
 //   try {
 //     await sequelize.authenticate();
-//     console.log('Database connection has been established successfully.');
+//     // console.log('Database connection has been established successfully.');
 //   } catch (error) {
 //     console.error('Unable to connect to the database:', error);
 //   }
@@ -19,29 +19,34 @@
 
 // module.exports = { sequelize, testConnection };
 
+
+
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  process.env.DB_NAME,     // database name
+  process.env.DB_USER,     // username
+  process.env.DB_PASSWORD, // password
   {
-    host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    host: process.env.DB_HOST,  
+    dialect: process.env.DB_DIALECT || 'mysql',
     logging: false,
-    dialectOptions: {
-      ssl: process.env.DB_SSL === 'true',
-    },
+    dialectOptions: process.env.DB_SSL === 'true' ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    } : {},
   }
 );
 
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ MySQL connection established successfully.');
+    console.log('✅ Database connected successfully!');
   } catch (error) {
-    console.error('❌ Unable to connect to MySQL:', error.message);
+    console.error('❌ Unable to connect to the database:', error);
   }
 };
 

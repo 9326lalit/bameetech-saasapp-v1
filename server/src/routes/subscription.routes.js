@@ -1,12 +1,15 @@
 const express = require('express');
-const { createDirectSubscription, getUserSubscription, getAllUserSubscriptions } = require('../controllers/subscription.controller');
+const router = express.Router();
+const { createOrder, verifyPayment, handleWebhook , getUserSubscription , getAllUserSubscriptions, cancelSubscription } = require('../controllers/subscription.controller.js');
 const { verifyToken } = require('../middlewares/auth.middleware');
 
-const router = express.Router();
+router.post('/create-order', verifyToken, createOrder);
+router.post('/verify-payment', verifyToken, verifyPayment);
+router.post('/webhook', express.json({ type: 'application/json' }), handleWebhook);
 
-// User subscription routes
-router.post('/subscribe-direct', verifyToken, createDirectSubscription);
 router.get('/my-subscription', verifyToken, getUserSubscription);
 router.get('/my-subscriptions', verifyToken, getAllUserSubscriptions);
+router.post('/cancel', cancelSubscription);
+
 
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { syncDatabase } = require('./models');
-const { testConnection } = require('./config/db.config');
+const  {testConnection}  = require('./config/db.config');
 const createSuperAdmin = require('./seeders/createSuperAdmin');
 const createDemoLeadDatabases = require('./seeders/createDemoLeadDatabases');
 const createSampleLeads = require('./seeders/createSampleLeads');
@@ -16,13 +16,14 @@ app.use(express.json());
 // Routes
 app.use('/auth', require('./routes/auth.routes'));
 app.use('/plans', require('./routes/plan.routes'));
-app.use('/payment', require('./routes/payment.routes'));
+app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/', require('./routes/lead.routes'));
 app.use('/', require('./routes/user.routes'));
 app.use('/admin', require('./routes/leadDatabase.routes'));
 app.use('/subscription', require('./routes/subscription.routes'));
+app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
 
-// Test database connection test
+// Test database connection
 testConnection();
 
 // Sync database models and create super admin

@@ -1,138 +1,284 @@
-const { Subscription, Plan, User, LeadDatabase } = require('../models');
+
+// controllers/subscriptionController.js
+const Razorpay = require('razorpay');
 const { Op } = require('sequelize');
 
-const createDirectSubscription = async (req, res) => {
+const crypto = require('crypto');
+const { Plan, Subscription, Payment } = require('../models');
+const { get } = require('http');
+require('dotenv').config();
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// 1️⃣ Create Razorpay Order API
+const createOrder = async (req, res) => {
   try {
     const { planId } = req.body;
     const userId = req.user.id;
-    
-    console.log('Creating subscription for user:', userId, 'plan:', planId);
-    
-    // Validate input
-    if (!planId) {
-      return res.status(400).json({ message: 'Plan ID is required' });
-    }
-    
-    // Get the plan details
+
     const plan = await Plan.findByPk(planId);
-    if (!plan) {
-      console.log('Plan not found:', planId);
-      return res.status(404).json({ message: 'Plan not found' });
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(plan.price * 100),
+      currency: 'INR',
+      receipt: `rec_${Date.now()}`,
+      notes: { planId, userId },
+    });
+
+    res.status(200).json({ message: 'Order created', order, key_id: process.env.RAZORPAY_KEY_ID });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating order', error: error.message });
+  }
+};
+
+// 2️⃣ Verify Payment API
+const verifyPayment = async (req, res) => {
+  try {
+    const { planId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const userId = req.user.id;
+
+    //  Verify Signature
+    const hash = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (hash !== razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid signature, payment failed' });
     }
-    
-    console.log('Found plan:', plan.name);
-    
-    // Check if user already has this specific plan active
-    const existingPlanSubscription = await Subscription.findOne({
+
+    // Prevent duplicate active subscriptions
+    const existing = await Subscription.findOne({
       where: {
         userId,
         planId,
         status: 'active',
-        endDate: {
-          [Op.gte]: new Date(),
-        },
+        endDate: { [Op.gte]: new Date() },
       },
     });
-    
-    if (existingPlanSubscription) {
-      console.log('User already has active subscription for this plan');
-      return res.status(400).json({ message: 'You already have an active subscription for this plan' });
-    }
-    
-    // Calculate end date
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + plan.duration);
-    
-    console.log('Creating subscription with dates:', { startDate, endDate });
-    
-    // Create subscription
+    if (existing) return res.status(400).json({ message: 'You already have an active subscription for this plan' });
+
+    // Create Subscription
+    const plan = await Plan.findByPk(planId);
+    const start = new Date();
+    const end = new Date(start.getTime() + plan.duration * 24 * 60 * 60 * 1000);
+
     const subscription = await Subscription.create({
       userId,
       planId,
+      startDate: start,
+      endDate: end,
       status: 'active',
-      startDate,
-      endDate,
-      amount: plan.price
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      amount: plan.price,
     });
-    
-    console.log('Subscription created successfully:', subscription.id);
-    
-    res.status(201).json({
-      message: 'Subscription created successfully',
-      subscription: {
-        ...subscription.toJSON(),
-        Plan: plan
-      }
+
+    // Save Payment Record
+    await Payment.create({
+      userId,
+      planId,
+      subscriptionId: subscription.id,
+      amount: plan.price,
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      status: 'success',
     });
-    
+
+    res.status(200).json({ message: 'Payment verified & subscription activated', subscription });
   } catch (error) {
-    console.error('Error creating subscription:', error);
-    res.status(500).json({ message: 'Error creating subscription', error: error.message });
+    res.status(500).json({ message: 'Error verifying payment', error: error.message });
   }
 };
 
+
+// 3️⃣ Razorpay Webhook - Server to Server
+const handleWebhook = async (req, res) => {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  const shasum = crypto.createHmac('sha256', secret);
+  shasum.update(JSON.stringify(req.body));
+  const digest = shasum.digest('hex');
+
+  if (digest !== req.headers['x-razorpay-signature']) {
+    return res.status(400).json({ status: 'invalid signature' });
+  }
+
+  console.log("✅ Webhook Verified");
+
+  try {
+    const event = req.body.event;
+
+    console.log("event hit...",event)
+    if (event === "payment.captured") {
+      const paymentEntity = req.body.payload.payment.entity;
+
+      const { order_id, id: paymentId, amount, notes } = paymentEntity;
+      const userId = notes.userId;
+      const planId = notes.planId;
+
+      // Fetch Plan
+      const plan = await Plan.findByPk(planId);
+
+      if (!plan) return console.log("❌ Plan not found in DB");
+
+      // Create subscription if not exists
+      let subscription = await Subscription.findOne({
+        where: {
+          userId,
+          planId,
+          status: "active"
+        }
+      });
+
+      const start = new Date();
+const end = new Date(start.getTime() + plan.duration * 24 * 60 * 60 * 1000);
+
+console.log('start:', start, 'end:', end);
+
+// Optional: format as MySQL DATETIME
+const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
+
+      if (!subscription) {
+        subscription = await Subscription.create({
+          userId,
+          planId,
+          startDate: formatDate(start),
+  endDate: formatDate(end),
+          status: "active",
+          orderId: razorpay_order_id,
+  paymentId: razorpay_payment_id,
+  amount: plan.price,
+        });
+      }
+
+      console.log("subscription done...");
+      // Store Payment
+      await Payment.create({
+        userId,
+        planId,
+        subscriptionId: subscription.id,
+        amount: amount / 100, // convert paise to INR
+        paymentId,
+        orderId: order_id,
+        status: "success"
+      });
+      console.log("✅ Payment & Subscription saved in DB");
+    }
+
+    res.status(200).json({ status: "ok" });
+
+  } catch (err) {
+    console.error("❌ Webhook error:", err.message);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+};
+
+
+// ✅  Get Active Subscription
 const getUserSubscription = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const subscription = await Subscription.findOne({
       where: {
         userId,
         status: 'active',
-        endDate: {
-          [Op.gte]: new Date(),
-        },
+        endDate: { [Op.gte]: new Date() }  // Valid subscription
       },
-      include: [{
-        model: Plan
-      }]
+      include: [{ model: Plan, attributes: ['name', 'price', 'duration'] }]
     });
-    
+
     if (!subscription) {
-      return res.status(404).json({ message: 'No active subscription found' });
+      return res.status(404).json({ message: "No active subscription found" });
     }
-    
-    res.status(200).json(subscription);
+
+    res.status(200).json({ message: "Active subscription fetched", subscription });
+
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching subscription', error: error.message });
+    res.status(500).json({ message: "Error fetching active subscription", error: error.message });
   }
 };
 
+
+// ✅  Get All Subscriptions (past + active)
 const getAllUserSubscriptions = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    console.log('Fetching subscriptions for user:', userId);
-    
+
     const subscriptions = await Subscription.findAll({
-      where: {
-        userId,
-        status: 'active',
-        endDate: {
-          [Op.gte]: new Date(),
-        },
-      },
-      include: [{
-        model: Plan,
-        include: [{
-          model: LeadDatabase
-        }]
-      }],
-      order: [['createdAt', 'DESC']]
+      where: { userId },
+      order: [['startDate', 'DESC']],
+      include: [{ model: Plan, attributes: ['name', 'price', 'duration'] }]
     });
-    
-    console.log('Found subscriptions:', subscriptions.length);
-    
-    res.status(200).json(subscriptions);
+
+    if (!subscriptions || subscriptions.length === 0) {
+      return res.status(404).json({ message: "No subscriptions found" });
+    }
+
+    res.status(200).json({ message: "All subscriptions fetched", subscriptions });
+
   } catch (error) {
-    console.error('Error fetching subscriptions:', error);
-    res.status(500).json({ message: 'Error fetching subscriptions', error: error.message });
+    res.status(500).json({ message: "Error fetching subscriptions", error: error.message });
   }
 };
 
-module.exports = {
-  createDirectSubscription,
-  getUserSubscription,
-  getAllUserSubscriptions
+
+// ✅ Cancel Subscription API
+const cancelSubscription = async (req, res) => {
+  try {
+    // ✅ Step 1: Validate input
+    const { subscriptionId } = req.body;
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "subscriptionId is required" });
+    }
+
+    // ✅ Step 2: Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized: user not found" });
+    }
+
+    const userId = req.user.id;
+
+    // ✅ Step 3: Check subscription exists for this user
+    const subscription = await Subscription.findOne({
+      where: { id: subscriptionId, userId },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+
+    // ✅ Step 4: If Razorpay subscription exists, cancel there too
+    if (subscription.razorpaySubscriptionId) {
+      await razorpay.subscriptions.cancel(subscription.razorpaySubscriptionId);
+    }
+
+    // ✅ Step 5: Update status in DB
+    subscription.status = "cancelled";
+    subscription.endDate = new Date(); // Access stop now
+    await subscription.save();
+
+    console.log("✅ Subscription cancelled:", subscription);
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscription cancelled successfully",
+      subscription,
+    });
+  } catch (error) {
+    console.error("❌ Cancel subscription error:", error);
+    res.status(500).json({
+      message: "Error cancelling subscription",
+      error: error.message,
+    });
+  }
 };
+
+
+
+module.exports = { createOrder, verifyPayment, handleWebhook , getUserSubscription, getAllUserSubscriptions , cancelSubscription };
+
