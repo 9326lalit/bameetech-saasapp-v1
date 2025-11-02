@@ -7,6 +7,8 @@ const Lead = sequelize.define('Lead', {
     primaryKey: true,
     autoIncrement: true,
   },
+  //table name
+  //leaddatabase id
   name: {
     type: DataTypes.STRING,
   },
@@ -30,5 +32,7 @@ const Lead = sequelize.define('Lead', {
     type: DataTypes.TEXT,
   },
 });
+
+//connectivity
 
 module.exports = Lead;
