@@ -26,7 +26,7 @@ LeadDatabase.hasMany(Plan, { foreignKey: 'leadDatabaseId' });
 // Sync all models with database
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log('All models were synchronized successfully.');
   } catch (error) {
     console.error('Error synchronizing models:', error);

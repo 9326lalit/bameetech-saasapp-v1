@@ -4,9 +4,11 @@ const Razorpay = require('razorpay');
 const { Op } = require('sequelize');
 
 const crypto = require('crypto');
-const { Plan, Subscription, Payment } = require('../models');
+const { Plan, Subscription, Payment, User } = require('../models');
 const { get } = require('http');
+const sendInvoiceMail = require('../utils/sendInvoiceMail');
 require('dotenv').config();
+const nodemailer = require("nodemailer");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -36,33 +38,91 @@ const createOrder = async (req, res) => {
 };
 
 // 2️⃣ Verify Payment API
+// const verifyPayment = async (req, res) => {
+//   try {
+//     const { planId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+//     const userId = req.user.id;
+
+//     //  Verify Signature
+//     const hash = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+//       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+//       .digest('hex');
+
+//     if (hash !== razorpay_signature) {
+//       return res.status(400).json({ message: 'Invalid signature, payment failed' });
+//     }
+
+//     // Prevent duplicate active subscriptions
+//     const existing = await Subscription.findOne({
+//       where: {
+//         userId,
+//         planId,
+//         status: 'active',
+//         endDate: { [Op.gte]: new Date() },
+//       },
+//     });
+//     if (existing) return res.status(400).json({ message: 'You already have an active subscription for this plan' });
+
+//     // Create Subscription
+//     const plan = await Plan.findByPk(planId);
+//     const start = new Date();
+//     const end = new Date(start.getTime() + plan.duration * 24 * 60 * 60 * 1000);
+
+//     const subscription = await Subscription.create({
+//       userId,
+//       planId,
+//       startDate: start,
+//       endDate: end,
+//       status: 'active',
+//       orderId: razorpay_order_id,
+//       paymentId: razorpay_payment_id,
+//       amount: plan.price,
+//     });
+
+//     // Save Payment Record
+//     await Payment.create({
+//       userId,
+//       planId,
+//       subscriptionId: subscription.id,
+//       amount: plan.price,
+//       paymentId: razorpay_payment_id,
+//       orderId: razorpay_order_id,
+//       status: 'success',
+//     });
+
+//     res.status(200).json({ message: 'Payment verified & subscription activated', subscription });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error verifying payment', error: error.message });
+//   }
+// };
+
+
 const verifyPayment = async (req, res) => {
   try {
     const { planId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
     const userId = req.user.id;
 
-    //  Verify Signature
-    const hash = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    // 1️⃣ Verify Signature
+    const hash = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
+      .digest("hex");
 
     if (hash !== razorpay_signature) {
-      return res.status(400).json({ message: 'Invalid signature, payment failed' });
+      return res.status(400).json({ message: "Invalid signature, payment failed" });
     }
 
-    // Prevent duplicate active subscriptions
+    // 2️⃣ Check Existing Active Subscription
     const existing = await Subscription.findOne({
-      where: {
-        userId,
-        planId,
-        status: 'active',
-        endDate: { [Op.gte]: new Date() },
-      },
+      where: { userId, planId, status: "active", endDate: { [Op.gte]: new Date() } },
     });
-    if (existing) return res.status(400).json({ message: 'You already have an active subscription for this plan' });
 
-    // Create Subscription
+    if (existing)
+      return res.status(400).json({ message: "You already have an active subscription for this plan" });
+
+    // 3️⃣ Create Subscription
     const plan = await Plan.findByPk(planId);
+    const user = await User.findByPk(userId);
+
     const start = new Date();
     const end = new Date(start.getTime() + plan.duration * 24 * 60 * 60 * 1000);
 
@@ -71,28 +131,36 @@ const verifyPayment = async (req, res) => {
       planId,
       startDate: start,
       endDate: end,
-      status: 'active',
+      status: "active",
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       amount: plan.price,
     });
 
-    // Save Payment Record
-    await Payment.create({
+    // 4️⃣ Save Payment Record
+    const payment = await Payment.create({
       userId,
       planId,
       subscriptionId: subscription.id,
       amount: plan.price,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
-      status: 'success',
+      status: "success",
     });
 
-    res.status(200).json({ message: 'Payment verified & subscription activated', subscription });
+    // 5️⃣ Send Invoice Email
+    await sendInvoiceMail(user, plan, subscription, payment);
+
+    res.status(200).json({
+      message: "Payment verified & subscription activated",
+      subscription,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error verifying payment', error: error.message });
+    console.error("Payment verification error:", error);
+    res.status(500).json({ message: "Error verifying payment", error: error.message });
   }
 };
+
 
 
 // 3️⃣ Razorpay Webhook - Server to Server

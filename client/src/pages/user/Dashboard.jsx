@@ -287,9 +287,9 @@ const handleCancel = async (id) => {
                     <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
                       <Link to={`/leads?plan=${plan.id || s.planId}`} className="btn btn-primary flex-1">Access Resources</Link>
                       <Link to={`/subscription/${s.id}`} className="btn btn-ghost">Details</Link>
-                      <button onClick={() => handleCancel(s?.id)}>
+                      {/* <button onClick={() => handleCancel(s?.id)}>
   Cancel Plan
-</button>
+</button> */}
 
                     </div>
                   </div>
