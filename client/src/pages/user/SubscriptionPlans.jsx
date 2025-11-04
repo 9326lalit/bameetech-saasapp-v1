@@ -409,6 +409,14 @@ const SubscriptionPlans = () => {
                       Renew Subscription
                     </button>
                   )}
+
+                 {/* //we show that html frame here.... */}
+{plan.htmlContent && (
+  <div
+    className="mt-5 border border-gray-200 rounded-xl overflow-hidden"
+    dangerouslySetInnerHTML={{ __html: plan.htmlContent }}
+  />
+)}
                 </div>
               );
             })}

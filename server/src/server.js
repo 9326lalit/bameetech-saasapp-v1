@@ -1,11 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
+
 const { syncDatabase } = require('./models');
-const  {testConnection}  = require('./config/db.config');
+const { testConnection } = require('./config/db.config');
 const createSuperAdmin = require('./seeders/createSuperAdmin');
 const createDemoLeadDatabases = require('./seeders/createDemoLeadDatabases');
 const createSampleLeads = require('./seeders/createSampleLeads');
-require('dotenv').config();
+const { subscriptionReminderJob } = require('./utils/subscriptionReminderJob.js');
 
 const app = express();
 
@@ -26,16 +28,21 @@ app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
 // Test database connection
 testConnection();
 
-// Sync database models and create super admin
+// Sync database + seeders + then start cron
 syncDatabase().then(async () => {
-  // Create super admin and demo data after database sync
   await createSuperAdmin();
   await createDemoLeadDatabases();
   await createSampleLeads();
+
+  console.log('All models were synchronized successfully.');
+
+  // ✅ Start reminder job only after DB is ready
+  subscriptionReminderJob();
+  console.log('🕒 Subscription reminder job started...');
 });
 
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
