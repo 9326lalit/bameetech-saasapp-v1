@@ -6,6 +6,7 @@ import {
     getAllRazorpayPayments,
     getAllRazorpayOrders,
     getAllRazorpaySubscriptions,
+    getAllUsers,
 } from '../../services/api';
 import { Users, CreditCard, DollarSign, TrendingUp, Calendar, Tag, Plus, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -55,6 +56,18 @@ const calculateTotalRevenueFromPayments = (payments) => {
     return capturedPayments.reduce((acc, p) => acc + (p.amount / 100), 0);
 };
 
+// Calculate revenue from active subscriptions only
+const calculateActiveSubscribersRevenue = (users) => {
+    let activeRevenue = 0;
+    users.forEach(user => {
+        const activeSubscriptions = user.Subscriptions?.filter(s => s.status === 'active') || [];
+        activeSubscriptions.forEach(sub => {
+            activeRevenue += sub.amount || 0;
+        });
+    });
+    return activeRevenue;
+};
+
 // --- Main Component ---
 const SuperAdminDashboard = () => {
     // 1. Check cache for initial state
@@ -65,6 +78,7 @@ const SuperAdminDashboard = () => {
         totalUsers: 0,
         activePlans: 0,
         totalRevenue: 0,
+        activeSubscribersRevenue: 0,
         recentPayments: [], 
         totalOrders: 0,
         totalSubscriptions: 0,
@@ -82,42 +96,48 @@ const SuperAdminDashboard = () => {
         setError('');
 
         try {
-            const [statsRes, plansRes, paymentsRes, ordersRes, subscriptionsRes] = await Promise.all([
+            const [statsRes, plansRes, paymentsRes, ordersRes, subscriptionsRes, usersRes] = await Promise.all([
                 getDashboardStats(),
                 getAllPlans(),
                 getAllRazorpayPayments(),
                 getAllRazorpayOrders(),
                 getAllRazorpaySubscriptions(),
+                getAllUsers(),
             ]);
 
             const payments = paymentsRes?.data?.items || [];
             const orders = ordersRes?.data?.items || [];
             const subscriptions = subscriptionsRes?.data?.items || [];
+            const users = usersRes?.data || [];
 
             // 1. Determine Total Revenue
             const totalRevenueFromAPI = paymentsRes?.data?.totalRevenue || 0;
             const totalRevenueCalculated = calculateTotalRevenueFromPayments(payments);
             const finalTotalRevenue = totalRevenueFromAPI || totalRevenueCalculated;
 
-            // 2. Sort payments
+            // 2. Calculate Active Subscribers Revenue
+            const activeRevenue = calculateActiveSubscribersRevenue(users);
+
+            // 3. Sort payments
             const sortedPayments = [...payments].sort((a, b) => b.created_at - a.created_at);
 
-            // 3. Prepare new state
+            // 4. Prepare new state
             const newStats = {
                 totalUsers: statsRes?.data?.totalUsers || 0,
                 activePlans: statsRes?.data?.activePlans || 0,
                 totalRevenue: finalTotalRevenue,
+                activeSubscribersRevenue: activeRevenue,
                 recentPayments: sortedPayments,
                 totalOrders: orders.length,
                 totalSubscriptions: subscriptions.length,
             };
             const newPlans = plansRes?.data || [];
 
-            // 4. Update state
+            // 5. Update state
             setStats(newStats);
             setPlans(newPlans);
 
-            // 5. Update Cache
+            // 6. Update Cache
             setCache({ stats: newStats, plans: newPlans });
 
         } catch (err) {
@@ -195,7 +215,7 @@ const SuperAdminDashboard = () => {
                 )}
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <StatCard
                         title="Total Users"
                         value={stats.totalUsers}
@@ -207,6 +227,12 @@ const SuperAdminDashboard = () => {
                         value={stats.activePlans}
                         icon={<CreditCard className="h-10 w-10 text-green-500" />}
                         color="green" 
+                    />
+                    <StatCard
+                        title="Active Revenue"
+                        value={formatCurrency(stats.activeSubscribersRevenue)} 
+                        icon={<DollarSign className="h-10 w-10 text-emerald-500" />}
+                        color="emerald"
                     />
                     <StatCard
                         title="Total Revenue"

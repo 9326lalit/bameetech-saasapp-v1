@@ -11,11 +11,13 @@ import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
 import SubscriptionPlans from "./pages/user/SubscriptionPlans";
 import UserLeads from "./pages/user/Leads";
+import SubscriberResources from "./pages/user/SubscriberResources";
 
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import Users from "./pages/admin/Users";
 import ProtectedRoute from "./routes/protectedRoutes";
 import PlanManagement from "./pages/admin/PlanManagement";
+import SubscriberManagement from "./pages/admin/SubscriberManagement";
 
 function App() {
   return (
@@ -46,6 +48,14 @@ function App() {
             }
           />
           <Route
+            path="/leads/plan/:planId"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <UserLeads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <ProtectedRoute requiredRole="user">
@@ -58,6 +68,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole="user">
                 <SubscriptionPlans />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resources"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <SubscriberResources />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resources/plan/:planId"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <SubscriberResources />
               </ProtectedRoute>
             }
           />
@@ -84,6 +110,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="super_admin">
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/super-admin/subscriber-management"
+            element={
+              <ProtectedRoute requiredRole="super_admin">
+                <SubscriberManagement />
               </ProtectedRoute>
             }
           />

@@ -1,6 +1,8 @@
   // src/pages/Plans/PlanModal.jsx
   import { useState, useEffect } from 'react';
   import { X, Tag, DollarSign, Calendar, Database, FileText, Upload, CheckCircle, Save, XCircle } from 'lucide-react';
+  import { getAvailableLeadTables } from '../../../services/api';
+  import axios from 'axios';
 
   const initialFormData = {
     name: '',
@@ -9,6 +11,8 @@
     duration: '',
     features: '', // Stored as newline-separated string in form
     leadDatabaseId: '',
+    leadTables: [], // New: array of selected lead tables
+    leadTableFields: {}, // New: field configuration for each table
     leadLimit: '',
     htmlContent: '',
     isActive: true,
@@ -17,10 +21,76 @@
   const PlanModal = ({ show, onClose, onSubmit, plan, leadDatabases, isSubmitting }) => {
     const [formData, setFormData] = useState(initialFormData);
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [availableLeadTables, setAvailableLeadTables] = useState([]);
+    const [tableFieldsData, setTableFieldsData] = useState({}); // Store available fields for each table
+
+    // Fetch available lead tables on mount
+    useEffect(() => {
+      if (show) {
+        fetchLeadTables();
+      }
+    }, [show]);
+
+    const fetchLeadTables = async () => {
+      try {
+        const response = await getAvailableLeadTables();
+        setAvailableLeadTables(response.data.tables || []);
+      } catch (error) {
+        console.error('Error fetching lead tables:', error);
+      }
+    };
+
+    // Fetch fields for a specific table
+    const fetchTableFields = async (tableName) => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/admin/lead-tables/${tableName}/fields`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.data.success) {
+          setTableFieldsData(prev => ({
+            ...prev,
+            [tableName]: response.data.fields || []
+          }));
+        }
+      } catch (error) {
+        console.error(`Error fetching fields for ${tableName}:`, error);
+      }
+    };
 
     // Sync modal state with the plan prop
     useEffect(() => {
       if (plan) {
+        console.log('📥 Loading plan into modal:', plan);
+        
+        // Parse leadTables if it's a string
+        let parsedLeadTables = [];
+        if (typeof plan.leadTables === 'string') {
+          try {
+            parsedLeadTables = JSON.parse(plan.leadTables);
+          } catch (e) {
+            console.error('Error parsing leadTables:', e);
+            parsedLeadTables = [];
+          }
+        } else if (Array.isArray(plan.leadTables)) {
+          parsedLeadTables = plan.leadTables;
+        }
+        
+        // Parse leadTableFields if it's a string
+        let parsedLeadTableFields = {};
+        if (typeof plan.leadTableFields === 'string') {
+          try {
+            parsedLeadTableFields = JSON.parse(plan.leadTableFields);
+          } catch (e) {
+            console.error('Error parsing leadTableFields:', e);
+            parsedLeadTableFields = {};
+          }
+        } else if (typeof plan.leadTableFields === 'object' && plan.leadTableFields !== null) {
+          parsedLeadTableFields = plan.leadTableFields;
+        }
+
         setFormData({
           name: plan.name || '',
           description: plan.description || '',
@@ -29,14 +99,20 @@
           // Convert array of features to newline-separated string for textarea
           features: Array.isArray(plan.features) ? plan.features.join('\n') : plan.features || '',
           leadDatabaseId: plan.leadDatabaseId || '',
+          leadTables: parsedLeadTables,
+          leadTableFields: parsedLeadTableFields,
           leadLimit: plan.leadLimit || '',
           htmlContent: plan.htmlContent || '',
           isActive: plan.isActive ?? true,
         });
+        
+        console.log('📥 Initialized formData with leadTables:', parsedLeadTables);
+        
         // Optionally handle existing documents here if the API provides them
         setSelectedFiles([]); 
       } else {
         setFormData(initialFormData);
+        console.log('📥 Reset to initial form data');
       }
     }, [plan]);
 
@@ -60,8 +136,53 @@
       setSelectedFiles(files);
     };
 
+    const handleLeadTableToggle = (tableValue) => {
+      console.log('🔄 handleLeadTableToggle called with:', tableValue);
+      
+      setFormData(prev => {
+        const currentTables = Array.isArray(prev.leadTables) ? prev.leadTables : [];
+        const isSelected = currentTables.includes(tableValue);
+        const newTables = isSelected
+          ? currentTables.filter(t => t !== tableValue)
+          : [...currentTables, tableValue];
+        
+        // If selecting a new table, fetch its fields
+        if (!isSelected) {
+          fetchTableFields(tableValue);
+        }
+        
+        // If deselecting, remove field configuration for this table
+        const newLeadTableFields = { ...prev.leadTableFields };
+        if (isSelected) {
+          delete newLeadTableFields[tableValue];
+        }
+        
+        console.log('📊 State update:', {
+          previousState: prev,
+          currentTables,
+          isSelected,
+          newTables,
+          tableValue
+        });
+        
+        const newState = {
+          ...prev,
+          leadTables: newTables,
+          leadTableFields: newLeadTableFields
+        };
+        
+        console.log('📊 New state:', newState);
+        
+        return newState;
+      });
+    };
+
     const handleFormSubmit = (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent any parent form submission
+
+      console.log('📤 Form submit triggered');
+      console.log('📤 Current formData state:', formData);
 
       // 1. Process Features String to Array
       const featuresArray = formData.features.split('\n')
@@ -75,8 +196,13 @@
           duration: parseInt(formData.duration),
           leadLimit: formData.leadLimit ? parseInt(formData.leadLimit) : null,
           features: featuresArray, // Send as array of strings
+          leadTables: Array.isArray(formData.leadTables) ? formData.leadTables : [], // Ensure it's an array
+          leadTableFields: formData.leadTableFields || {}, // Include field configuration
           isActive: formData.isActive
       };
+
+      console.log('📤 Submitting plan with leadTables:', finalFormData.leadTables);
+      console.log('📤 Full form data:', finalFormData);
 
       onSubmit(finalFormData, selectedFiles);
     };
@@ -93,7 +219,12 @@
             </button>
           </div>
 
-          <form onSubmit={handleFormSubmit} className="p-6 space-y-8">
+          <form onSubmit={handleFormSubmit} className="p-6 space-y-8" onClick={(e) => {
+            // Prevent form submission when clicking inside the form
+            if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+              e.stopPropagation();
+            }
+          }}>
             
             {/* Section: Basic Information */}
             <div className="space-y-4 p-4 border rounded-lg bg-gray-50/70">
@@ -149,23 +280,156 @@
               {/* Lead Database Configuration */}
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900 border-b pb-1 flex items-center"><Database className="h-4 w-4 mr-1 text-gray-600" /> Lead Access</h4>
+                
+                {/* New: Supabase Lead Tables Multi-Select */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Select Lead Database</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Lead Tables (Supabase)</label>
+                  <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-white">
+                    {availableLeadTables.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic">No lead tables found. Create tables via Elementor webhook.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {availableLeadTables.map((table) => (
+                          <label key={table.value} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                              type="checkbox"
+                              checked={(formData.leadTables || []).includes(table.value)}
+                              onChange={(e) => {
+                                e.stopPropagation(); // Prevent event bubbling
+                                console.log('Checkbox clicked:', table.value);
+                                console.log('Current leadTables:', formData.leadTables);
+                                handleLeadTableToggle(table.value);
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent event bubbling on click too
+                              }}
+                              disabled={isSubmitting}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                            <span className="text-sm text-gray-700">{table.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Selected: {(formData.leadTables || []).length} table(s). Subscribers will have access to leads from these tables.
+                  </p>
+                  {formData.leadTables && formData.leadTables.length > 0 && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-xs font-medium text-blue-700 mb-1">Selected Tables:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.leadTables.map(table => (
+                          <span key={table} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            {table}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Field Selection for Each Table */}
+                {formData.leadTables && formData.leadTables.length > 0 && (
+                  <div className="mt-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Configure Fields for Each Table</h5>
+                    <div className="space-y-4">
+                      {formData.leadTables.map(tableName => {
+                        const availableFields = tableFieldsData[tableName] || [];
+                        const selectedFields = formData.leadTableFields[tableName] || [];
+                        
+                        return (
+                          <div key={tableName} className="border border-gray-200 rounded-lg p-4 bg-white">
+                            <div className="flex items-center justify-between mb-3">
+                              <h6 className="font-medium text-gray-800 flex items-center">
+                                <Database className="h-4 w-4 mr-2 text-indigo-600" />
+                                {tableName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </h6>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Select all fields
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    leadTableFields: {
+                                      ...prev.leadTableFields,
+                                      [tableName]: availableFields.length === selectedFields.length ? [] : availableFields
+                                    }
+                                  }));
+                                }}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                                disabled={isSubmitting || availableFields.length === 0}
+                              >
+                                {selectedFields.length === availableFields.length ? 'Deselect All' : 'Select All'}
+                              </button>
+                            </div>
+                            
+                            {availableFields.length === 0 ? (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-gray-500">Loading fields...</p>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+                                  {availableFields.map(field => (
+                                    <label key={field} className="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedFields.includes(field)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          const isChecked = e.target.checked;
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            leadTableFields: {
+                                              ...prev.leadTableFields,
+                                              [tableName]: isChecked
+                                                ? [...selectedFields, field]
+                                                : selectedFields.filter(f => f !== field)
+                                            }
+                                          }));
+                                        }}
+                                        disabled={isSubmitting}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                      />
+                                      <span className="text-gray-700">{field}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                  {selectedFields.length === 0 ? (
+                                    <span className="text-amber-600 font-medium">⚠️ No fields selected - subscribers will see all fields</span>
+                                  ) : (
+                                    <span>Selected {selectedFields.length} of {availableFields.length} fields</span>
+                                  )}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy: External Lead Database (kept for backward compatibility) */}
+                <div className="pt-3 border-t border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Legacy: External Lead Database</label>
                   <select name="leadDatabaseId" value={formData.leadDatabaseId} onChange={handleInputChange} className="input" disabled={isSubmitting}>
-                    <option value="">No Database Access</option>
+                    <option value="">No External Database</option>
                     {leadDatabases.map((db) => (
                       <option key={db.id} value={db.id}>
                         {db.name} (ID: {db.id})
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Link this plan to a specific lead source.</p>
+                  <p className="text-xs text-gray-500 mt-1">Legacy option for external MySQL databases.</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Lead Limit</label>
-                  <input type="number" name="leadLimit" value={formData.leadLimit} onChange={handleInputChange} className="input" min="0" placeholder="500" disabled={isSubmitting} />
-                  <p className="text-xs text-gray-500 mt-1">Max leads accessible (leave empty for unlimited access to the selected database).</p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lead Limit (per table)</label>
+                  <input type="number" name="leadLimit" value={formData.leadLimit} onChange={handleInputChange} className="input" min="0" placeholder="Leave empty for unlimited" disabled={isSubmitting} />
+                  <p className="text-xs text-gray-500 mt-1">Max leads accessible per table (leave empty for unlimited).</p>
                 </div>
               </div>
               

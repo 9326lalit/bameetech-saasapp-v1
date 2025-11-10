@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator</title>
+
+    <!-- 
+    ============================================================================
+    == INSTRUCTIONS FOR WORDPRESS & GOOGLE DRIVE INTEGRATION ==
+    ============================================================================
+
+    1. HOW TO USE IN WORDPRESS:
+       - Simply copy and paste the entire content of this HTML file into a "Custom HTML" block 
+         on a WordPress page or post.
+       - Alternatively, for theme developers, you can paste this code into a custom 
+         page template file (e.g., template-image-tool.php).
+
+    2. GOOGLE DRIVE INTEGRATION (Optional):
+       This tool supports uploading the final image directly to Google Drive.
+       This requires setting up a Google Cloud Platform project.
+
+       *STEP 2.1: Get API Key and Client ID*
+       - Go to the Google Cloud Console: https://console.cloud.google.com/
+       - Create a new project.
+       - Go to "APIs & Services" > "Credentials".
+       - Create an "API key". Copy it.
+       - Create an "OAuth 2.0 Client ID" for a "Web application".
+         - Under "Authorized JavaScript origins", add your website's URL (e.g., https://your-wordpress-site.com).
+         - Copy the "Client ID".
+       - Go to "APIs & Services" > "Library".
+       - Search for and enable both the "Google Drive API" and the "Google Picker API".
+
+       *STEP 2.2: Add Credentials to this File*
+       - Scroll down to the <script> section at the bottom of this file.
+       - Find the googleDriveConfig object.
+       - Replace the placeholder values for API_KEY and CLIENT_ID with the credentials you just created.
+
+       *STEP 2.3: Server-Side Alternative (More Secure)*
+       - For production, a server-side approach is recommended. This tool includes a
+         commented-out example uploadToServer function.
+       - You would need to create a backend endpoint (e.g., a WordPress AJAX handler or REST route)
+         at /upload-to-drive. This endpoint would handle the Google Drive authentication
+         and file upload securely on the server. The example fetch call shows how the
+         client would send the image data.
+    
+    ============================================================================
+    -->
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS for animations, aspect ratios, and UI elements -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the file input to hide the default ugly button */
+        .file-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+
+        /* Drag-over effect for upload zones */
+        .drag-over {
+            border-color: #3b82f6;
+            /* blue-500 */
+            background-color: #eff6ff;
+            /* blue-50 */
+        }
+
+        /* Custom animation for elements fading in */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Custom properties for required aspect ratios */
+        .aspect-ratio-main {
+            aspect-ratio: 1080 / 1350;
+        }
+
+        .aspect-ratio-overlay {
+            aspect-ratio: 1080 / 350;
+        }
+
+        /* Custom slider thumb styles */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">image Generator</h1>
+            <p class="text-lg text-gray-600 mt-2">Upload your images to generate a combined version.</p>
+        </header>
+
+        <!-- Google Drive Link Section -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 mb-8">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <path
+                            d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Google Drive Folder</h2>
+                    <p class="text-gray-500 text-sm">Access your saved images from Google Drive.</p>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-4">
+                If you don’t have the main image, you can choose and use one from the Drive!
+            </p>
+            <!-- ======================================================================== -->
+            <!-- == YOUR GOOGLE DRIVE FOLDER LINK GOES HERE                           == -->
+            <!-- Replace "https://drive.google.com/" with the direct link to your folder. -->
+            <!-- ======================================================================== -->
+            <a href="https://drive.google.com/drive/folders/1FCWBqLcVRZJYDXlT-guHC-Jyfc_ik_ap?usp=drive_link"
+                class="w-full flex items-center justify-center gap-2 bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-yellow-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path
+                        d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z" />
+                </svg>
+                Open Google Drive
+            </a>
+        </div>
+
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Column 1: Main Image Upload -->
+            <div id="folder-main" class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold">A: Main Image</h2>
+                        <p class="text-gray-500 text-sm">Required: 1080 &times; 1350 px</p>
+                    </div>
+                </div>
+
+                <!-- Upload Zone -->
+                <div id="upload-zone-main"
+                    class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                    <input type="file" id="file-input-main" class="file-input"
+                        accept="image/png, image/jpeg, image/webp">
+                    <label for="file-input-main" class="flex flex-col items-center justify-center space-y-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-4-4V6a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4H7z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 16V9a4 4 0 00-4-4H8a4 4 0 00-4 4v7" />
+                        </svg>
+                        <span class="font-medium text-gray-600">Drag & Drop or <span
+                                class="text-blue-600">Browse</span></span>
+                        <span class="text-xs text-gray-500">PNG, JPG, WEBP</span>
+                    </label>
+                </div>
+
+                <!-- Preview and Info Area -->
+                <div id="preview-area-main" class="hidden mt-4 space-y-4">
+                    <img id="preview-img-main" src="https://placehold.co/1080x1350/e2e8f0/cbd5e1?text=Main+Image"
+                        alt="Main image preview" class="w-full rounded-lg bg-gray-200 aspect-ratio-main object-cover">
+                    <div id="info-main" class="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="replace-btn-main"
+                            class="w-full text-center bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">Replace</button>
+                        <button id="remove-btn-main"
+                            class="w-full text-center bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Error/Resize Area -->
+                <div id="error-area-main"
+                    class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 space-y-2">
+                    <p id="error-msg-main">Image dimensions are incorrect.</p>
+                    <button id="resize-btn-main"
+                        class="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Auto-Resize
+                        & Center Crop</button>
+                </div>
+            </div>
+
+            <!-- Column 2: Header & Footer Uploads -->
+            <div class="space-y-8">
+                <!-- Header Image Upload -->
+                <div id="folder-header" class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">B: Header Image (Optional)</h2>
+                            <p class="text-gray-500 text-sm">Required: 1080 &times; 350 px</p>
+                        </div>
+                    </div>
+
+                    <div id="upload-zone-header"
+                        class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+                        <input type="file" id="file-input-header" class="file-input"
+                            accept="image/png, image/jpeg, image/webp">
+                        <label for="file-input-header" class="flex flex-col items-center justify-center space-y-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-4-4V6a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4H7z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 16V9a4 4 0 00-4-4H8a4 4 0 00-4 4v7" />
+                            </svg>
+                            <span class="font-medium text-gray-600">Drag & Drop or <span
+                                    class="text-indigo-600">Browse</span></span>
+                            <span class="text-xs text-gray-500">PNG, JPG, WEBP</span>
+                        </label>
+                    </div>
+
+                    <div id="preview-area-header" class="hidden mt-4 space-y-4">
+                        <img id="preview-img-header" src="https://placehold.co/1080x350/c7d2fe/4338ca?text=Header+Image"
+                            alt="Header image preview"
+                            class="w-full rounded-lg bg-gray-200 aspect-ratio-overlay object-cover">
+                        <div id="info-header" class="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="replace-btn-header"
+                                class="w-full text-center bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">Replace</button>
+                            <button id="remove-btn-header"
+                                class="w-full text-center bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors">Remove</button>
+                        </div>
+                    </div>
+
+                    <div id="error-area-header"
+                        class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 space-y-2">
+                        <p id="error-msg-header">Image dimensions are incorrect.</p>
+                        <button id="resize-btn-header"
+                            class="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Auto-Resize
+                            & Center Crop</button>
+                    </div>
+                </div>
+
+                <!-- Footer Image Upload -->
+                <div id="folder-footer" class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="bg-purple-100 text-purple-600 p-3 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">C: Footer Image (Optional)</h2>
+                            <p class="text-gray-500 text-sm">Required: 1080 &times; 350 px</p>
+                        </div>
+                    </div>
+
+                    <div id="upload-zone-footer"
+                        class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-purple-500 transition-colors">
+                        <input type="file" id="file-input-footer" class="file-input"
+                            accept="image/png, image/jpeg, image/webp">
+                        <label for="file-input-footer" class="flex flex-col items-center justify-center space-y-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-4-4V6a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4H7z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 16V9a4 4 0 00-4-4H8a4 4 0 00-4 4v7" />
+                            </svg>
+                            <span class="font-medium text-gray-600">Drag & Drop or <span
+                                    class="text-purple-600">Browse</span></span>
+                            <span class="text-xs text-gray-500">PNG, JPG, WEBP</span>
+                        </label>
+                    </div>
+
+                    <div id="preview-area-footer" class="hidden mt-4 space-y-4">
+                        <img id="preview-img-footer"
+                            src="https://placehold.co/1080x350/e9d5ff/a855f7?text=Overlay+Image"
+                            alt="Footer image preview"
+                            class="w-full rounded-lg bg-gray-200 aspect-ratio-overlay object-cover">
+                        <div id="info-footer" class="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="replace-btn-footer"
+                                class="w-full text-center bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">Replace</button>
+                            <button id="remove-btn-footer"
+                                class="w-full text-center bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors">Remove</button>
+                        </div>
+                    </div>
+
+                    <div id="error-area-footer"
+                        class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 space-y-2">
+                        <p id="error-msg-footer">Image dimensions are incorrect.</p>
+                        <button id="resize-btn-footer"
+                            class="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Auto-Resize
+                            & Center Crop</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Result & Controls -->
+            <div id="folder-result" class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-green-100 text-green-600 p-3 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold">D: Generated Image</h2>
+                        <p class="text-gray-500 text-sm">Combined result: 1080 &times; 1350 px</p>
+                    </div>
+                </div>
+
+                <!-- Canvas Preview -->
+                <div id="result-area"
+                    class="relative bg-gray-100 rounded-xl flex items-center justify-center aspect-ratio-main">
+                    <canvas id="canvas" width="1080" height="1350"
+                        class="w-full h-full object-contain rounded-lg absolute top-0 left-0"></canvas>
+                    <div id="result-placeholder" class="text-center text-gray-500 p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="mt-2 font-medium">Waiting for main image...</p>
+                        <p class="text-xs">Upload an image in folder A to begin.</p>
+                    </div>
+                </div>
+
+                <!-- Controls Area -->
+                <div id="controls-area" class="mt-6 pt-6 border-t border-gray-200 space-y-4">
+                    <h3 class="font-semibold text-lg">Overlay Controls</h3>
+                    <!-- Header Controls -->
+                    <div id="header-controls" class="space-y-2 opacity-50 pointer-events-none">
+                        <p class="text-sm font-bold text-indigo-700">Header</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <label for="opacity-slider-header" class="font-medium">Opacity</label>
+                            <span id="opacity-value-header">100%</span>
+                        </div>
+                        <input id="opacity-slider-header" type="range" min="0" max="1" step="0.01" value="1"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between items-center text-sm">
+                            <label for="offset-slider-header" class="font-medium">Vertical Offset</label>
+                            <span id="offset-value-header">0 px</span>
+                        </div>
+                        <input id="offset-slider-header" type="range" min="-20" max="20" step="1" value="0"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <!-- Footer Controls -->
+                    <div id="footer-controls"
+                        class="space-y-2 pt-4 border-t border-gray-100 opacity-50 pointer-events-none">
+                        <p class="text-sm font-bold text-purple-700">Footer</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <label for="opacity-slider-footer" class="font-medium">Opacity</label>
+                            <span id="opacity-value-footer">100%</span>
+                        </div>
+                        <input id="opacity-slider-footer" type="range" min="0" max="1" step="0.01" value="1"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between items-center text-sm">
+                            <label for="offset-slider-footer" class="font-medium">Vertical Offset</label>
+                            <span id="offset-value-footer">0 px</span>
+                        </div>
+                        <input id="offset-slider-footer" type="range" min="-20" max="20" step="1" value="0"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="actions-area" class="mt-4 space-y-3">
+                    <button id="download-btn" disabled
+                        class="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download Image
+                    </button>
+                    <button id="gdrive-btn" disabled
+                        class="hidden w-full items-center justify-center gap-2 bg-white text-gray-700 font-bold py-3 px-4 rounded-lg border-2 border-gray-300 hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed disabled:text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19.75 12.04l-7.06-7.06-1.42 1.42 5.66 5.66-5.66 5.66 1.42 1.42 7.06-7.06zM6.16 6.04L4.75 7.46l5.66 5.66-5.66 5.66 1.41 1.41 5.66-5.65-1.42-1.42z" />
+                            <path d="M0 0h24v24H0z" fill="none" />
+                        </svg>
+                        <span>Save to Google Drive</span>
+                    </button>
+                    <button id="reset-btn"
+                        class="w-full text-center text-gray-500 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors">Reset
+                        All</button>
+                </div>
+            </div>
+
+        </div> <!-- end grid -->
+
+    </div> <!-- end container -->
+
+
+    <!-- Client-side JavaScript for all functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ========================================================================
+            // == CONFIGURATION & STATE
+            // ========================================================================
+
+            const googleDriveConfig = {
+                API_KEY: 'YOUR_GOOGLE_API_KEY',
+                CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID',
+                SCOPES: 'https://www.googleapis.com/auth/drive.file',
+                DISCOVERY_DOCS: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+            };
+
+            const TARGET_DIMENSIONS = {
+                Main: { width: 1080, height: 1350 },
+                Header: { width: 1080, height: 350 },
+                Footer: { width: 1080, height: 350 },
+            };
+
+            const appState = {
+                imageMain: null,
+                imageHeader: null,
+                imageFooter: null,
+                activeFolder: null,
+                controls: {
+                    headerOpacity: 1,
+                    headerOffsetY: 0,
+                    footerOpacity: 1,
+                    footerOffsetY: 0,
+                },
+                gapiLoaded: false,
+                tokenClient: null,
+            };
+
+            // ========================================================================
+            // == DOM ELEMENT REFERENCES
+            // ========================================================================
+
+            const dom = {
+                // Main Image elements
+                uploadZoneMain: document.getElementById('upload-zone-main'),
+                fileInputMain: document.getElementById('file-input-main'),
+                previewAreaMain: document.getElementById('preview-area-main'),
+                previewImgMain: document.getElementById('preview-img-main'),
+                infoMain: document.getElementById('info-main'),
+                errorAreaMain: document.getElementById('error-area-main'),
+                errorMsgMain: document.getElementById('error-msg-main'),
+                resizeBtnMain: document.getElementById('resize-btn-main'),
+                replaceBtnMain: document.getElementById('replace-btn-main'),
+                removeBtnMain: document.getElementById('remove-btn-main'),
+
+                // Header Image elements
+                uploadZoneHeader: document.getElementById('upload-zone-header'),
+                fileInputHeader: document.getElementById('file-input-header'),
+                previewAreaHeader: document.getElementById('preview-area-header'),
+                previewImgHeader: document.getElementById('preview-img-header'),
+                infoHeader: document.getElementById('info-header'),
+                errorAreaHeader: document.getElementById('error-area-header'),
+                errorMsgHeader: document.getElementById('error-msg-header'),
+                resizeBtnHeader: document.getElementById('resize-btn-header'),
+                replaceBtnHeader: document.getElementById('replace-btn-header'),
+                removeBtnHeader: document.getElementById('remove-btn-header'),
+
+                // Footer Image elements
+                uploadZoneFooter: document.getElementById('upload-zone-footer'),
+                fileInputFooter: document.getElementById('file-input-footer'),
+                previewAreaFooter: document.getElementById('preview-area-footer'),
+                previewImgFooter: document.getElementById('preview-img-footer'),
+                infoFooter: document.getElementById('info-footer'),
+                errorAreaFooter: document.getElementById('error-area-footer'),
+                errorMsgFooter: document.getElementById('error-msg-footer'),
+                resizeBtnFooter: document.getElementById('resize-btn-footer'),
+                replaceBtnFooter: document.getElementById('replace-btn-footer'),
+                removeBtnFooter: document.getElementById('remove-btn-footer'),
+
+                // Result & Global controls
+                canvas: document.getElementById('canvas'),
+                ctx: document.getElementById('canvas').getContext('2d'),
+                resultPlaceholder: document.getElementById('result-placeholder'),
+                downloadBtn: document.getElementById('download-btn'),
+                gdriveBtn: document.getElementById('gdrive-btn'),
+                resetBtn: document.getElementById('reset-btn'),
+
+                // Overlay controls
+                headerControls: document.getElementById('header-controls'),
+                opacitySliderHeader: document.getElementById('opacity-slider-header'),
+                opacityValueHeader: document.getElementById('opacity-value-header'),
+                offsetSliderHeader: document.getElementById('offset-slider-header'),
+                offsetValueHeader: document.getElementById('offset-value-header'),
+
+                footerControls: document.getElementById('footer-controls'),
+                opacitySliderFooter: document.getElementById('opacity-slider-footer'),
+                opacityValueFooter: document.getElementById('opacity-value-footer'),
+                offsetSliderFooter: document.getElementById('offset-slider-footer'),
+                offsetValueFooter: document.getElementById('offset-value-footer'),
+            };
+
+            // ========================================================================
+            // == FILE HANDLING & PROCESSING
+            // ========================================================================
+
+            function handleFileSelect(file, folderId) {
+                if (!file || !file.type.startsWith('image/')) {
+                    alert('Please select an image file.');
+                    return;
+                }
+                appState.activeFolder = folderId;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => processImage(img, file, folderId);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function processImage(img, file, folderId) {
+                const target = TARGET_DIMENSIONS[folderId];
+                const { width, height } = img;
+
+                // Always show the uploaded image immediately
+                setImage(img, file, folderId);
+
+                // Then, show the resize option if dimensions are not correct
+                if (width !== target.width || height !== target.height) {
+                    showError(folderId, Incorrect size: ${ width }x${ height }px.Required: ${ target.width }x${ target.height }px.);
+                } else {
+                    hideError(folderId);
+                }
+            }
+
+            function setImage(img, file, folderId) {
+                appState[image${ folderId }] = img;
+
+                const previewImg = dom[previewImg${ folderId }];
+                const info = dom[info${ folderId }];
+
+                previewImg.src = img.src;
+                info.innerHTML = `
+                    <strong>${file.name}</strong><br>
+                    Size: ${(file.size / 1024).toFixed(1)} KB<br>
+                    Dimensions: ${img.width} &times; ${img.height} px
+                `;
+
+                showPreview(folderId);
+                updateCanvasAndControls();
+            }
+
+            function autoResizeImage(folderId) {
+                const img = appState[image${ folderId }];
+                if (!img) return;
+
+                const target = TARGET_DIMENSIONS[folderId];
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = target.width;
+                tempCanvas.height = target.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                const imgRatio = img.width / img.height;
+                const targetRatio = target.width / target.height;
+                let sx, sy, sWidth, sHeight;
+
+                if (imgRatio > targetRatio) {
+                    sHeight = img.height;
+                    sWidth = sHeight * targetRatio;
+                    sx = (img.width - sWidth) / 2;
+                    sy = 0;
+                } else {
+                    sWidth = img.width;
+                    sHeight = sWidth / targetRatio;
+                    sx = 0;
+                    sy = (img.height - sHeight) / 2;
+                }
+                tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, target.width, target.height);
+                const resizedImg = new Image();
+                resizedImg.onload = () => {
+                    let originalFileName = ${ folderId.toLowerCase()
+                }-image.png;
+                try {
+                    originalFileName = dom[info${ folderId }].querySelector('strong').textContent;
+                } catch (e) {
+                    console.warn("Could not retrieve original filename.");
+                }
+                const mockFile = { name: resized_${ originalFileName }, size: 0
+            };
+            setImage(resizedImg, mockFile, folderId);
+            hideError(folderId);
+        };
+        resizedImg.src = tempCanvas.toDataURL('image/png');
+            }
+
+        // ========================================================================
+        // == CANVAS & UI DRAWING
+        // ========================================================================
+
+        function drawCanvas() {
+            dom.ctx.clearRect(0, 0, dom.canvas.width, dom.canvas.height);
+            dom.ctx.fillStyle = '#f1f5f9';
+            dom.ctx.fillRect(0, 0, dom.canvas.width, dom.canvas.height);
+
+            if (appState.imageMain) {
+                // Draw main image, but only if it's the correct size for the canvas
+                // If not, the canvas remains blank until resized. This prevents distortion.
+                if (appState.imageMain.width === TARGET_DIMENSIONS.Main.width && appState.imageMain.height === TARGET_DIMENSIONS.Main.height) {
+                    dom.ctx.drawImage(appState.imageMain, 0, 0);
+                }
+            }
+
+            if (appState.imageHeader) {
+                if (appState.imageMain && appState.imageMain.width === TARGET_DIMENSIONS.Main.width && appState.imageMain.height === TARGET_DIMENSIONS.Main.height) {
+                    dom.ctx.globalAlpha = appState.controls.headerOpacity;
+                    const headerY = appState.controls.headerOffsetY;
+                    dom.ctx.drawImage(appState.imageHeader, 0, headerY);
+                    dom.ctx.globalAlpha = 1.0;
+                }
+            }
+
+            if (appState.imageFooter) {
+                if (appState.imageMain && appState.imageMain.width === TARGET_DIMENSIONS.Main.width && appState.imageMain.height === TARGET_DIMENSIONS.Main.height) {
+                    dom.ctx.globalAlpha = appState.controls.footerOpacity;
+                    const footerY = dom.canvas.height - appState.imageFooter.height + appState.controls.footerOffsetY;
+                    dom.ctx.drawImage(appState.imageFooter, 0, footerY);
+                    dom.ctx.globalAlpha = 1.0;
+                }
+            }
+        }
+
+        function updateCanvasAndControls() {
+            drawCanvas();
+            const mainImageCorrectSize = appState.imageMain && appState.imageMain.width === TARGET_DIMENSIONS.Main.width && appState.imageMain.height === TARGET_DIMENSIONS.Main.height;
+
+            dom.resultPlaceholder.style.display = mainImageCorrectSize ? 'none' : 'flex';
+            dom.downloadBtn.disabled = !mainImageCorrectSize;
+            dom.gdriveBtn.disabled = !mainImageCorrectSize;
+
+            if (appState.imageHeader) {
+                dom.headerControls.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                dom.headerControls.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            if (appState.imageFooter) {
+                dom.footerControls.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                dom.footerControls.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        // ========================================================================
+        // == UI STATE HELPERS (SHOW/HIDE/RESET)
+        // ========================================================================
+        function removeImage(folderId) {
+            appState[image${ folderId }] = null;
+            dom[fileInput${ folderId }].value = ''; // Clear the file input
+            hidePreview(folderId);
+            hideError(folderId);
+            updateCanvasAndControls();
+        }
+
+        function showPreview(folderId) {
+            dom[uploadZone${ folderId }].classList.add('hidden');
+            dom[previewArea${ folderId }].classList.remove('hidden');
+            dom[previewArea${ folderId }].classList.add('fade-in');
+        }
+
+        function hidePreview(folderId) {
+            dom[uploadZone${ folderId }].classList.remove('hidden');
+            dom[previewArea${ folderId }].classList.add('hidden');
+            dom[previewArea${ folderId }].classList.remove('fade-in');
+            const placeholderUrl = {
+                Main: 'https://placehold.co/1080x1350/e2e8f0/cbd5e1?text=Main+Image',
+                Header: 'https://placehold.co/1080x350/c7d2fe/4338ca?text=Header+Image',
+                Footer: 'https://placehold.co/1080x350/e9d5ff/a855f7?text=Footer+Image'
+            };
+            dom[previewImg${ folderId }].src = placeholderUrl[folderId];
+        }
+
+        function showError(folderId, message) {
+            dom[errorMsg${ folderId }].textContent = message;
+            dom[errorArea${ folderId }].classList.remove('hidden');
+        }
+
+        function hideError(folderId) {
+            dom[errorArea${ folderId }].classList.add('hidden');
+        }
+
+        function setupDragAndDrop(zone, folderId) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, e => e.preventDefault() & e.stopPropagation(), false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('drag-over'), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('drag-over'), false);
+            });
+            zone.addEventListener('drop', e => {
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFileSelect(e.dataTransfer.files[0], folderId);
+                }
+            }, false);
+        }
+
+        function resetAll() {
+            appState.imageMain = null;
+            appState.imageHeader = null;
+            appState.imageFooter = null;
+
+            Object.keys(appState.controls).forEach(key => {
+                appState.controls[key] = key.includes('Opacity') ? 1 : 0;
+            });
+
+            ['Main', 'Header', 'Footer'].forEach(id => {
+                dom[fileInput${ id }].value = '';
+                hidePreview(id);
+                hideError(id);
+            });
+
+            dom.opacitySliderHeader.value = 1;
+            dom.offsetSliderHeader.value = 0;
+            dom.opacityValueHeader.textContent = '100%';
+            dom.offsetValueHeader.textContent = '0 px';
+
+            dom.opacitySliderFooter.value = 1;
+            dom.offsetSliderFooter.value = 0;
+            dom.opacityValueFooter.textContent = '100%';
+            dom.offsetValueFooter.textContent = '0 px';
+
+            updateCanvasAndControls();
+        }
+
+        // ========================================================================
+        // == EVENT LISTENERS
+        // ========================================================================
+
+        // File inputs, Drag/Drop, Replace, Remove
+        ['Main', 'Header', 'Footer'].forEach(id => {
+            dom[fileInput${ id }].addEventListener('change', e => handleFileSelect(e.target.files[0], id));
+            setupDragAndDrop(dom[uploadZone${ id }], id);
+            dom[resizeBtn${ id }].addEventListener('click', () => autoResizeImage(id));
+            dom[replaceBtn${ id }].addEventListener('click', () => dom[fileInput${ id }].click());
+            dom[removeBtn${ id }].addEventListener('click', () => removeImage(id));
+        });
+
+        // Header Control sliders
+        dom.opacitySliderHeader.addEventListener('input', e => {
+            appState.controls.headerOpacity = parseFloat(e.target.value);
+            dom.opacityValueHeader.textContent = ${ Math.round(appState.controls.headerOpacity * 100) }%;
+            drawCanvas();
+        });
+        dom.offsetSliderHeader.addEventListener('input', e => {
+            appState.controls.headerOffsetY = parseInt(e.target.value, 10);
+            dom.offsetValueHeader.textContent = ${ appState.controls.headerOffsetY } px;
+            drawCanvas();
+        });
+
+        // Footer Control sliders
+        dom.opacitySliderFooter.addEventListener('input', e => {
+            appState.controls.footerOpacity = parseFloat(e.target.value);
+            dom.opacityValueFooter.textContent = ${ Math.round(appState.controls.footerOpacity * 100) }%;
+            drawCanvas();
+        });
+        dom.offsetSliderFooter.addEventListener('input', e => {
+            appState.controls.footerOffsetY = parseInt(e.target.value, 10);
+            dom.offsetValueFooter.textContent = ${ appState.controls.footerOffsetY } px;
+            drawCanvas();
+        });
+
+        // Action buttons
+        dom.resetBtn.addEventListener('click', resetAll);
+        dom.downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'generated-image.png';
+            link.href = dom.canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // ========================================================================
+        // == GOOGLE DRIVE INTEGRATION
+        // ========================================================================
+
+        function initializeGapi() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    apiKey: googleDriveConfig.API_KEY,
+                    discoveryDocs: googleDriveConfig.DISCOVERY_DOCS,
+                });
+                appState.gapiLoaded = true;
+            });
+        }
+
+        function initializeGis() {
+            appState.tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: googleDriveConfig.CLIENT_ID,
+                scope: googleDriveConfig.SCOPES,
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        // The GIS library doesn't set the token for gapi automatically, so we do it manually.
+                        gapi.client.setToken({ access_token: tokenResponse.access_token });
+                        uploadToDrive();
+                    } else {
+                        alert("Authentication failed. Please try again.");
+                    }
+                },
+            });
+        }
+
+        function handleAuthClick() {
+            if (gapi.client.getToken() === null) {
+                appState.tokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                uploadToDrive();
+            }
+        }
+
+        function uploadToDrive() {
+            dom.canvas.toBlob(blob => {
+                const metadata = {
+                    name: generated - image - ${ Date.now()
+            }.png,
+                mimeType: 'image/png',
+                    };
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', blob);
+        const uploadRequest = gapi.client.request({
+            path: 'https://www.googleapis.com/upload/drive/v3/files',
+            method: 'POST',
+            params: { uploadType: 'multipart' },
+            body: form
+        });
+        uploadRequest.execute(file => {
+            console.log('File uploaded:', file);
+            alert(Successfully uploaded to Google Drive! File name: ${ file.name });
+        });
+                }, 'image/png');
+            }
+
+        async function uploadToServer() {
+            dom.gdriveBtn.textContent = "Uploading...";
+            dom.gdriveBtn.disabled = true;
+            dom.canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'generated-image.png');
+                try {
+                    const response = await fetch('/upload-to-drive', { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error(Server responded with ${ response.status });
+            const result = await response.json();
+            alert('Upload successful! File available at: ' + result.url);
+        } catch (error) {
+            console.error('Error uploading to server:', error);
+            alert('Upload failed. Please check the console for details.');
+        } finally {
+            dom.gdriveBtn.textContent = "Save to Google Drive";
+            dom.gdriveBtn.disabled = false;
+        }
+                }, 'image/png');
+            }
+
+        function init() {
+            if (googleDriveConfig.API_KEY !== 'YOUR_GOOGLE_API_KEY' && googleDriveConfig.CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
+                dom.gdriveBtn.classList.remove('hidden');
+                dom.gdriveBtn.addEventListener('click', handleAuthClick);
+                const gapiScript = document.createElement('script');
+                gapiScript.src = 'https://apis.google.com/js/api.js';
+                gapiScript.onload = initializeGapi;
+                document.body.appendChild(gapiScript);
+                const gisScript = document.createElement('script');
+                gisScript.src = 'https://accounts.google.com/gsi/client';
+                gisScript.onload = initializeGis;
+                document.body.appendChild(gisScript);
+            }
+            resetAll();
+        }
+
+        init();
+        });
+    </script>
+</body>
+
+</html>

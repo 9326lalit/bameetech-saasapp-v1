@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -50,9 +50,16 @@ export const createOrder = (planId) => api.post('/subscription/create-order',  p
 export const verifyPayment = (paymentData) => api.post('/subscription/verify-payment', paymentData);
 
 // Lead services
-export const getUserLeads = () => api.get('/user/leads');
-export const getAdminLeads = () => api.get('/admin/leads');
-export const exportLeads = () => api.get('/admin/leads/export', { responseType: 'blob' });
+export const getUserLeads = () => api.get('/api/user/leads'); // Legacy endpoint
+export const getUserLeadsOverview = () => api.get('/api/user/leads-overview'); // Get all subscriptions with lead access
+export const getPlanLeads = (planId, tableName = null) => {
+  const url = tableName ? `/api/user/plan/${planId}/leads?tableName=${tableName}` : `/api/user/plan/${planId}/leads`;
+  return api.get(url);
+}; // Get leads for specific plan
+export const getAdminLeads = () => api.get('/api/admin/leads');
+export const exportLeads = () => api.get('/api/admin/leads/export', { responseType: 'blob' });
+export const getAvailableLeadTables = () => api.get('/api/admin/lead-tables'); // Get all Supabase lead tables
+export const getLeadsFromTable = (tableName) => api.get(`/api/admin/lead-tables/${tableName}`); // Get leads from specific table
 
 // User services (admin)
 export const getAllUsers = () => api.get('/super-admin/users');
@@ -78,5 +85,19 @@ export const getAllRazorpayPayments = () => api.get('/api/razorpay/payments');
 export const getAllRazorpayOrders = () => api.get('/api/razorpay/orders');
 export const getAllRazorpaySubscriptions = () => api.get('/api/razorpay/subscriptions');
 
+// Subscriber resource services
+export const getSubscriberResources = () => api.get('/subscriber/my-resources');
+export const getPlanResources = (planId) => api.get(`/subscriber/plan/${planId}/resources`);
+export const downloadPlanDocument = (planId, documentIndex) => 
+  api.get(`/subscriber/plan/${planId}/document/${documentIndex}`, { responseType: 'blob' });
+
+// Admin subscriber management services
+export const createAdminSubscriber = (subscriberData) => api.post('/admin/subscribers', subscriberData);
+export const grantAccessToExistingUser = (grantData) => api.post('/admin/grant-access', grantData);
+export const searchExistingUsers = (query) => api.get(`/admin/search-users?query=${encodeURIComponent(query)}`);
+export const getAdminGrantedSubscribers = () => api.get('/admin/subscribers');
+export const getSubscriberDetails = (subscriberId) => api.get(`/admin/subscribers/${subscriberId}`);
+export const updateSubscriberAccess = (subscriberId, updateData) => api.put(`/admin/subscribers/${subscriberId}`, updateData);
+export const deleteAdminSubscriber = (subscriberId) => api.delete(`/admin/subscribers/${subscriberId}`);
 
 export default api;

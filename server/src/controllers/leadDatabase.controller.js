@@ -1,4 +1,5 @@
 const { LeadDatabase } = require('../models');
+const { testLeadDatabaseConnection } = require('../services/leadDatabaseService');
 
 const getAllLeadDatabases = async (req, res) => {
   try {
@@ -90,17 +91,20 @@ const testDatabaseConnection = async (req, res) => {
   try {
     const { host, port, database, username, password } = req.body;
     
-    // For demo purposes, we'll just return success
-    // In production, you would actually test the database connection
-    res.status(200).json({ 
-      success: true, 
-      message: 'Database connection successful',
-      details: `Connected to ${database} on ${host}:${port}`
+    // Test the actual database connection
+    const result = await testLeadDatabaseConnection({
+      host,
+      port: port || 3306,
+      database,
+      username,
+      password
     });
+    
+    res.status(result.success ? 200 : 500).json(result);
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      message: 'Database connection failed', 
+      message: 'Database connection test failed', 
       error: error.message 
     });
   }

@@ -1,4 +1,5 @@
 const { Subscription } = require("../models");
+const { Op } = require('sequelize');
 
 const checkActiveSubscription = async (userId) => {
     const subscription = await Subscription.findOne({

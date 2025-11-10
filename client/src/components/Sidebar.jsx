@@ -42,6 +42,7 @@ const Sidebar = () => {
   const commonLinks = [
     { to: "/dashboard", label: "Dashboard", icon: "home" },
     { to: "/leads", label: "Leads", icon: "users" },
+    { to: "/resources", label: "My Resources", icon: "database" },
     { to: "/subscription-plans", label: "Subscription", icon: "credit-card" },
     { to: "/profile", label: "Profile", icon: "user" },
   ];
@@ -49,7 +50,8 @@ const Sidebar = () => {
   const superAdminLinks = [
     { to: "/super-admin/dashboard", label: "Dashboard", icon: "home" },
     { to: "/super-admin/plan-management", label: "Plan Management", icon: "tag" },
-    { to: "/super-admin/users", label: "Subscribers", icon: "users" },
+    { to: "/super-admin/users", label: "All Subscribers", icon: "users" },
+    { to: "/super-admin/subscriber-management", label: "Grant Access", icon: "user" },
     // { to: "/super-admin/settings", label: "Settings", icon: "settings" },
     // { to: "/super-admin/analytics", label: "Analytics", icon: "analytics" },
   ];

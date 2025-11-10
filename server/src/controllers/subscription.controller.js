@@ -264,7 +264,13 @@ const getUserSubscription = async (req, res) => {
       return res.status(404).json({ message: "No active subscription found" });
     }
 
-    res.status(200).json({ message: "Active subscription fetched", subscription });
+    // Add admin-granted flag
+    const subscriptionData = {
+      ...subscription.toJSON(),
+      isAdminGranted: subscription.paymentId === 'admin_granted'
+    };
+
+    res.status(200).json({ message: "Active subscription fetched", subscription: subscriptionData });
 
   } catch (error) {
     res.status(500).json({ message: "Error fetching active subscription", error: error.message });

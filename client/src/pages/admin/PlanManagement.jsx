@@ -62,17 +62,29 @@ const PlanManagement = () => {
     setIsSubmitting(true);
     setError(null);
 
+    console.log('📤 handleModalSubmit received formData:', formData);
+
     // Build FormData for file upload / multipart endpoints
     const dataToSend = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (key === 'features') {
+      if (key === 'features' || key === 'leadTables') {
+        // Serialize arrays as JSON
         dataToSend.append(key, JSON.stringify(value || []));
+      } else if (key === 'leadDatabaseIds' || key === 'selectedFields' || key === 'leadLimits' || key === 'leadTableFields') {
+        // Serialize complex objects/arrays as JSON
+        dataToSend.append(key, JSON.stringify(value || (key === 'leadDatabaseIds' ? [] : {})));
       } else {
         dataToSend.append(key, value ?? '');
       }
     });
+    
     // append files if present
     (files || []).forEach(file => dataToSend.append('documents', file));
+
+    console.log('📤 Sending to API:', {
+      leadTables: formData.leadTables,
+      features: formData.features
+    });
 
     try {
       if (currentPlan) {

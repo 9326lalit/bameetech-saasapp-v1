@@ -285,8 +285,8 @@ const handleCancel = async (id) => {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
-                      <Link to={`/leads?plan=${plan.id || s.planId}`} className="btn btn-primary flex-1">Access Resources</Link>
-                      <Link to={`/subscription/${s.id}`} className="btn btn-ghost">Details</Link>
+                      <Link to={`/resources/plan/${plan.id || s.planId}`} className="btn btn-primary flex-1">Access Resources</Link>
+                      <Link to="/leads" className="btn btn-ghost">View Leads</Link>
                       {/* <button onClick={() => handleCancel(s?.id)}>
   Cancel Plan
 </button> */}
@@ -308,7 +308,8 @@ const handleCancel = async (id) => {
                 <p className="text-sm text-gray-500">Common tasks for your account</p>
               </div>
               <div className="flex gap-2">
-                <Link to="/leads" className="btn">View Leads</Link>
+                <Link to="/resources" className="btn">My Resources</Link>
+                <Link to="/leads" className="btn btn-outline">View Leads</Link>
                 <Link to="/profile" className="btn btn-outline">Manage Profile</Link>
               </div>
             </div>

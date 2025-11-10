@@ -25,13 +25,23 @@ const Plan = sequelize.define('Plan', {
   features: {
     type: DataTypes.TEXT,
   },
-  // Lead database association
+  // Lead database association (legacy)
   leadDatabaseId: {
     type: DataTypes.INTEGER,
     references: {
       model: 'lead_databases',
       key: 'id'
     }
+  },
+  // Lead tables (Supabase/Elementor forms) - array of table names
+  leadTables: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  // Field configuration for each table - which fields to show to subscribers
+  leadTableFields: {
+    type: DataTypes.JSON,
+    defaultValue: {} // Format: { "table_name": ["field1", "field2", ...] }
   },
   // Lead limits
   leadLimit: {

@@ -51,6 +51,16 @@ const SubscriptionPlans = () => {
         getUserSubscription().catch(() => ({ data: [] }))
       ]);
 
+      console.log('📋 Plans received from API:', plansResponse.data);
+      // Check if any plan has htmlContent (it shouldn't)
+      plansResponse.data?.forEach(plan => {
+        if (plan.htmlContent) {
+          console.error('❌ SECURITY ISSUE: Plan', plan.id, 'contains HTML content in public endpoint!');
+        } else {
+          console.log('✅ Plan', plan.id, 'correctly has no HTML content, hasHtmlContent:', plan.hasHtmlContent);
+        }
+      });
+
       setPlans(plansResponse.data || []);
 
       // Normalize subscriptions to always be an array
@@ -106,7 +116,7 @@ const SubscriptionPlans = () => {
   };
 
   // Razorpay subscription
-  const handleSubscribe = async (planId, planName, planPrice) => {
+  const handleSubscribe = async (planId, planName) => {
     if (isPlanActive(planId)) {
       showToast('You already have an active subscription for this plan!', 'info');
       return;
@@ -364,12 +374,34 @@ const SubscriptionPlans = () => {
                           <span className="text-gray-700">Full access to all features</span>
                         </li>
                       )}
+                      
+                      {/* Show additional content indicators */}
+                      {plan.hasHtmlContent && (
+                        <li className="flex items-start">
+                          <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">Exclusive premium content</span>
+                        </li>
+                      )}
+                      
+                      {plan.documents && plan.documents.length > 0 && (
+                        <li className="flex items-start">
+                          <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{plan.documents.length} downloadable resource{plan.documents.length > 1 ? 's' : ''}</span>
+                        </li>
+                      )}
+                      
+                      {plan.LeadDatabase && (
+                        <li className="flex items-start">
+                          <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">Access to {plan.LeadDatabase.name} lead database</span>
+                        </li>
+                      )}
                     </ul>
                   </div>
 
                   {/* Action Button */}
                   <button
-                    onClick={() => handleSubscribe(plan.id, plan.name, plan.price)}
+                    onClick={() => handleSubscribe(plan.id, plan.name)}
                     disabled={processing === plan.id || isActive}
                     className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center ${
                       isActive
@@ -402,7 +434,7 @@ const SubscriptionPlans = () => {
                   {/* Renew Option */}
                   {isActive && subscriptionDetails && calculateDaysRemaining(subscriptionDetails.endDate) <= 7 && (
                     <button
-                      onClick={() => handleSubscribe(plan.id, plan.name, plan.price)}
+                      onClick={() => handleSubscribe(plan.id, plan.name)}
                       disabled={processing === plan.id}
                       className="w-full mt-3 py-3 px-6 rounded-xl font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-300"
                     >
@@ -410,13 +442,28 @@ const SubscriptionPlans = () => {
                     </button>
                   )}
 
-                 {/* //we show that html frame here.... */}
-{plan.htmlContent && (
-  <div
-    className="mt-5 border border-gray-200 rounded-xl overflow-hidden"
-    dangerouslySetInnerHTML={{ __html: plan.htmlContent }}
-  />
-)}
+                 {/* Show content availability indicator only */}
+                 {plan.hasHtmlContent && (
+                   <div className="mt-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                     <div className="flex items-center text-blue-700">
+                       <Package className="h-4 w-4 mr-2" />
+                       <span className="text-sm font-medium">Includes exclusive content and resources</span>
+                     </div>
+                     <p className="text-xs text-blue-600 mt-1">
+                       Access premium content after subscribing to this plan
+                     </p>
+                   </div>
+                 )}
+
+                 {/* SECURITY: Never display HTML content on public subscription page */}
+                 {plan.htmlContent && (
+                   <div className="mt-5 p-3 bg-red-50 border border-red-200 rounded-lg">
+                     <div className="flex items-center text-red-700">
+                       <AlertCircle className="h-4 w-4 mr-2" />
+                       <span className="text-sm font-medium">SECURITY WARNING: HTML content detected on public page!</span>
+                     </div>
+                   </div>
+                 )}
                 </div>
               );
             })}
