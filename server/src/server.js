@@ -24,15 +24,28 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-app.use('/auth', require('./routes/auth.routes'));
-app.use('/plans', require('./routes/plan.routes'));
+// app.use('/auth', require('./routes/auth.routes'));
+// app.use('/plans', require('./routes/plan.routes'));
+// app.use('/api/payment', require('./routes/payment.routes'));
+// app.use('/api', require('./routes/lead.routes')); // Changed from '/' to '/api'
+// app.use('/', require('./routes/user.routes'));
+// app.use('/admin', require('./routes/leadDatabase.routes'));
+// app.use('/admin', require('./routes/adminSubscriber.routes'));
+// app.use('/subscription', require('./routes/subscription.routes'));
+// app.use('/subscriber', require('./routes/subscriberResource.routes'));
+// app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
+
+
+// Routes
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/plans', require('./routes/plan.routes'));
 app.use('/api/payment', require('./routes/payment.routes'));
-app.use('/api', require('./routes/lead.routes')); // Changed from '/' to '/api'
-app.use('/', require('./routes/user.routes'));
-app.use('/admin', require('./routes/leadDatabase.routes'));
-app.use('/admin', require('./routes/adminSubscriber.routes'));
-app.use('/subscription', require('./routes/subscription.routes'));
-app.use('/subscriber', require('./routes/subscriberResource.routes'));
+app.use('/api/leads', require('./routes/lead.routes')); // old /api → /api/leads
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/admin/leaddb', require('./routes/leadDatabase.routes'));
+app.use('/api/admin/subscribers', require('./routes/adminSubscriber.routes'));
+app.use('/api/subscription', require('./routes/subscription.routes'));
+app.use('/api/subscriber', require('./routes/subscriberResource.routes'));
 app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
 
 // Test database connection
@@ -66,6 +79,6 @@ syncDatabase().then(async () => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
