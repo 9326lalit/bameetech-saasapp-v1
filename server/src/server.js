@@ -13,7 +13,11 @@ const { subscriptionReminderJob } = require('./utils/subscriptionReminderJob.js'
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: 'http://147.79.71.235',
+  credentials: true
+}));
 app.use(express.json());
 
 // Serve uploaded files statically

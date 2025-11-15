@@ -43,7 +43,7 @@
     // Fetch fields for a specific table
     const fetchTableFields = async (tableName) => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin/lead-tables/${tableName}/fields`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/lead-tables/${tableName}/fields`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
