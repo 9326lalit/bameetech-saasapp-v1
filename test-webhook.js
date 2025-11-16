@@ -7,7 +7,7 @@
 
 const axios = require('axios');
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://147.79.71.235/api';
 
 // Test data for different forms
 const testLeads = [
