@@ -59,7 +59,7 @@ const Login = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-600 mt-2">Sign in to your BameeTech account</p>
+            <p className="text-gray-600 mt-2">Signnn in to your BameeTech account</p>
           </div>
 
           {error && (
