@@ -255,7 +255,7 @@ const SuperAdminDashboard = () => {
                 <SubscriptionPlans plans={plans} />
 
                 {/* Razorpay Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard
                         title="Total Razorpay Payments"
                         value={stats.recentPayments.length}
@@ -274,7 +274,7 @@ const SuperAdminDashboard = () => {
                         icon={<Tag className="h-10 w-10 text-yellow-500" />}
                         color="yellow"
                     />
-                </div>
+                </div> */}
 
                 {/* Recent Payments Table - NOW ENABLED */}
                 {/* <RecentPaymentsTable payments={stats.recentPayments} /> */}

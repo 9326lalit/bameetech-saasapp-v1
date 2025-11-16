@@ -264,12 +264,12 @@ const Login = () => {
                 Create account
               </Link>
             </p>
-            <p className="text-sm text-gray-500 pt-2 border-t">
+            {/* <p className="text-sm text-gray-500 pt-2 border-t">
               BameeTech Administrator?{" "}
               <Link to="/admin-login" className="text-purple-600 font-medium hover:underline">
                 Admin Login
               </Link>
-            </p>
+            </p> */}
           </div>
 
         </div>
