@@ -109,7 +109,7 @@ const Login = () => {
               {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="loading-spinner mr-2"></div>
-                  Signing in...
+                  Sign in...
                 </div>
               ) : (
                 'Sign in'
@@ -119,7 +119,7 @@ const Login = () => {
 
           <div className="mt-6 space-y-3 text-center">
             <p className="text-gray-600">
-              Don't havsdfe an account?{' '}
+              Don't have an account?{' '}
               <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
                 Create account
               </Link>
