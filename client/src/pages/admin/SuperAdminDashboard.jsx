@@ -435,11 +435,11 @@ const SubscriptionPlans = ({ plans }) => (
 
 const RecentOrdersTable = ({ ordersCount }) => (
     <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        {/* <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-teal-600" /> Razorpay Orders Summary
         </h2>
         <p className="text-lg text-gray-700">Total Orders Created: <span className="font-bold text-teal-600">{ordersCount}</span></p>
-        <p className="text-sm text-gray-500 mt-2">Note: This is a summary. Complete order details would require a dedicated table component.</p>
+        <p className="text-sm text-gray-500 mt-2">Note: This is a summary. Complete order details would require a dedicated table component.</p> */}
     </div>
 );
 
