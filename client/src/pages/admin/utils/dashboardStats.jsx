@@ -6,7 +6,7 @@ const DashboardStats = ({ users }) => {
   return (
     <div>
       <h2>Dashboard Stats</h2>
-      <p>Total Revenue: ₹{totalRevenue}</p>
+      {/* <p>Total Revenue: ₹{totalRevenue}</p> */}
       <p>Active Plans: {activePlans}</p>
       <h3>Recent Payments:</h3>
       <ul>

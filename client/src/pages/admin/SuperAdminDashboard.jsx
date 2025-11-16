@@ -234,12 +234,12 @@ const SuperAdminDashboard = () => {
                         icon={<DollarSign className="h-10 w-10 text-emerald-500" />}
                         color="emerald"
                     />
-                    <StatCard
+                    {/* <StatCard
                         title="Total Revenue"
                         value={formatCurrency(stats.totalRevenue)} 
                         icon={<DollarSign className="h-10 w-10 text-purple-500" />}
                         color="purple"
-                    />
+                    /> */}
                     <StatCard
                         title="Available Plans"
                         value={plans.length}
