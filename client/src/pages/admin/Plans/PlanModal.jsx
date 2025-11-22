@@ -1,6 +1,6 @@
   // src/pages/Plans/PlanModal.jsx
   import { useState, useEffect } from 'react';
-  import { X, Tag, DollarSign, Calendar, Database, FileText, Upload, CheckCircle, Save, XCircle } from 'lucide-react';
+  import { X, Tag, Database, FileText, Upload, CheckCircle, Save, XCircle } from 'lucide-react';
   import { getAvailableLeadTables } from '../../../services/api';
   import axios from 'axios';
 
@@ -10,15 +10,14 @@
     price: '',
     duration: '',
     features: '', // Stored as newline-separated string in form
-    leadDatabaseId: '',
-    leadTables: [], // New: array of selected lead tables
-    leadTableFields: {}, // New: field configuration for each table
-    leadLimit: '',
+    leadTables: [], // Array of selected lead tables
+    leadTableFields: {}, // Field configuration for each table
     htmlContent: '',
+    contentUrls: [], // WordPress protected content URLs
     isActive: true,
   };
 
-  const PlanModal = ({ show, onClose, onSubmit, plan, leadDatabases, isSubmitting }) => {
+  const PlanModal = ({ show, onClose, onSubmit, plan, isSubmitting }) => {
     const [formData, setFormData] = useState(initialFormData);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [availableLeadTables, setAvailableLeadTables] = useState([]);
@@ -98,11 +97,10 @@
           duration: plan.duration || '',
           // Convert array of features to newline-separated string for textarea
           features: Array.isArray(plan.features) ? plan.features.join('\n') : plan.features || '',
-          leadDatabaseId: plan.leadDatabaseId || '',
           leadTables: parsedLeadTables,
           leadTableFields: parsedLeadTableFields,
-          leadLimit: plan.leadLimit || '',
           htmlContent: plan.htmlContent || '',
+          contentUrls: Array.isArray(plan.contentUrls) ? plan.contentUrls : [],
           isActive: plan.isActive ?? true,
         });
         
@@ -194,10 +192,10 @@
           ...formData,
           price: parseFloat(formData.price),
           duration: parseInt(formData.duration),
-          leadLimit: formData.leadLimit ? parseInt(formData.leadLimit) : null,
           features: featuresArray, // Send as array of strings
           leadTables: Array.isArray(formData.leadTables) ? formData.leadTables : [], // Ensure it's an array
           leadTableFields: formData.leadTableFields || {}, // Include field configuration
+          contentUrls: Array.isArray(formData.contentUrls) ? formData.contentUrls : [], // Include content URLs
           isActive: formData.isActive
       };
 
@@ -412,25 +410,6 @@
                   </div>
                 )}
 
-                {/* Legacy: External Lead Database (kept for backward compatibility) */}
-                <div className="pt-3 border-t border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Legacy: External Lead Database</label>
-                  <select name="leadDatabaseId" value={formData.leadDatabaseId} onChange={handleInputChange} className="input" disabled={isSubmitting}>
-                    <option value="">No External Database</option>
-                    {leadDatabases.map((db) => (
-                      <option key={db.id} value={db.id}>
-                        {db.name} (ID: {db.id})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Legacy option for external MySQL databases.</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Lead Limit (per table)</label>
-                  <input type="number" name="leadLimit" value={formData.leadLimit} onChange={handleInputChange} className="input" min="0" placeholder="Leave empty for unlimited" disabled={isSubmitting} />
-                  <p className="text-xs text-gray-500 mt-1">Max leads accessible per table (leave empty for unlimited).</p>
-                </div>
               </div>
               
               {/* HTML Content */}
@@ -461,6 +440,157 @@
                     </ul>
                   </div>
                 )}
+              </div>
+
+              {/* WordPress Protected Content URLs */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h4 className="font-medium text-gray-900 border-b pb-1 flex items-center">
+                  <svg className="h-4 w-4 mr-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  Protected Content (WordPress)
+                </h4>
+                
+                <div className="space-y-3">
+                  {(formData.contentUrls || []).map((content, index) => (
+                    <div key={content.id || index} className="p-4 border border-gray-200 rounded-lg bg-white space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-medium text-gray-700">Content #{index + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newContentUrls = formData.contentUrls.filter((_, i) => i !== index);
+                            setFormData({ ...formData, contentUrls: newContentUrls });
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                          disabled={isSubmitting}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={content.title || ''}
+                            onChange={(e) => {
+                              const newContentUrls = [...formData.contentUrls];
+                              newContentUrls[index] = { ...content, title: e.target.value };
+                              setFormData({ ...formData, contentUrls: newContentUrls });
+                            }}
+                            className="input text-sm"
+                            placeholder="e.g., Module 1: Introduction"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Order</label>
+                          <input
+                            type="number"
+                            value={content.order || index + 1}
+                            onChange={(e) => {
+                              const newContentUrls = [...formData.contentUrls];
+                              newContentUrls[index] = { ...content, order: parseInt(e.target.value) || index + 1 };
+                              setFormData({ ...formData, contentUrls: newContentUrls });
+                            }}
+                            className="input text-sm"
+                            min="1"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">WordPress URL</label>
+                        <input
+                          type="url"
+                          value={content.url || ''}
+                          onChange={(e) => {
+                            const newContentUrls = [...formData.contentUrls];
+                            newContentUrls[index] = { ...content, url: e.target.value };
+                            setFormData({ ...formData, contentUrls: newContentUrls });
+                          }}
+                          className="input text-sm"
+                          placeholder="https://yourwordpress.com/protected-page"
+                          disabled={isSubmitting}
+                        />
+                        {content.url && (content.url.includes('linkedin.com') || content.url.includes('facebook.com') || content.url.includes('instagram.com') || content.url.includes('twitter.com')) && (
+                          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                            ⚠️ Warning: Social media URLs (LinkedIn, Facebook, etc.) may not work. Please use WordPress pages instead.
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">WordPress Password (Optional)</label>
+                        <input
+                          type="text"
+                          value={content.password || ''}
+                          onChange={(e) => {
+                            const newContentUrls = [...formData.contentUrls];
+                            newContentUrls[index] = { ...content, password: e.target.value };
+                            setFormData({ ...formData, contentUrls: newContentUrls });
+                          }}
+                          className="input text-sm font-mono"
+                          placeholder="Leave empty if page is not password-protected"
+                          disabled={isSubmitting}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {content.password && content.password.trim() !== '' 
+                            ? '🔒 Password-protected: Set this password in WordPress (Edit Page → Visibility → Password Protected)'
+                            : '🌐 Public page: Leave empty if the WordPress page is not password-protected'
+                          }
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Description (Optional)</label>
+                        <textarea
+                          value={content.description || ''}
+                          onChange={(e) => {
+                            const newContentUrls = [...formData.contentUrls];
+                            newContentUrls[index] = { ...content, description: e.target.value };
+                            setFormData({ ...formData, contentUrls: newContentUrls });
+                          }}
+                          className="input text-sm"
+                          rows="2"
+                          placeholder="Brief description of this content"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newContent = {
+                        id: `content-${Date.now()}`,
+                        title: '',
+                        url: '',
+                        password: '',
+                        description: '',
+                        order: (formData.contentUrls || []).length + 1
+                      };
+                      setFormData({
+                        ...formData,
+                        contentUrls: [...(formData.contentUrls || []), newContent]
+                      });
+                    }}
+                    className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors text-sm font-medium"
+                    disabled={isSubmitting}
+                  >
+                    + Add Protected Content URL
+                  </button>
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    💡 <strong>How it works:</strong> Create password-protected pages in WordPress, then add their URLs here. 
+                    Subscribers will access content through your SaaS app without seeing the password.
+                  </p>
+                </div>
               </div>
             </div>
 

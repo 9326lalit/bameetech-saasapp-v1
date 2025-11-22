@@ -257,18 +257,37 @@ const getUserSubscription = async (req, res) => {
         status: 'active',
         endDate: { [Op.gte]: new Date() }  // Valid subscription
       },
-      include: [{ model: Plan, attributes: ['name', 'price', 'duration'] }]
+      include: [{ 
+        model: Plan, 
+        attributes: ['id', 'name', 'description', 'price', 'duration', 'contentUrls', 'htmlContent', 'documents', 'features'] 
+      }]
     });
 
     if (!subscription) {
       return res.status(404).json({ message: "No active subscription found" });
     }
 
-    // Add admin-granted flag
+    // Add admin-granted flag and parse plan data
     const subscriptionData = {
       ...subscription.toJSON(),
       isAdminGranted: subscription.paymentId === 'admin_granted'
     };
+
+    // Parse features if present
+    if (subscriptionData.Plan && subscriptionData.Plan.features) {
+      try {
+        subscriptionData.Plan.features = typeof subscriptionData.Plan.features === 'string' 
+          ? JSON.parse(subscriptionData.Plan.features) 
+          : subscriptionData.Plan.features;
+      } catch (e) {
+        subscriptionData.Plan.features = [];
+      }
+    }
+
+    // Ensure contentUrls is always an array
+    if (subscriptionData.Plan && (!subscriptionData.Plan.contentUrls || !Array.isArray(subscriptionData.Plan.contentUrls))) {
+      subscriptionData.Plan.contentUrls = [];
+    }
 
     res.status(200).json({ message: "Active subscription fetched", subscription: subscriptionData });
 
@@ -286,14 +305,36 @@ const getAllUserSubscriptions = async (req, res) => {
     const subscriptions = await Subscription.findAll({
       where: { userId },
       order: [['startDate', 'DESC']],
-      include: [{ model: Plan, attributes: ['name', 'price', 'duration'] }]
+      include: [{ 
+        model: Plan, 
+        attributes: ['id', 'name', 'description', 'price', 'duration', 'contentUrls', 'htmlContent', 'documents', 'features'] 
+      }]
     });
 
     if (!subscriptions || subscriptions.length === 0) {
       return res.status(404).json({ message: "No subscriptions found" });
     }
 
-    res.status(200).json({ message: "All subscriptions fetched", subscriptions });
+    // Parse features for each plan
+    const parsedSubscriptions = subscriptions.map(sub => {
+      const subData = sub.toJSON();
+      if (subData.Plan && subData.Plan.features) {
+        try {
+          subData.Plan.features = typeof subData.Plan.features === 'string' 
+            ? JSON.parse(subData.Plan.features) 
+            : subData.Plan.features;
+        } catch (e) {
+          subData.Plan.features = [];
+        }
+      }
+      // Ensure contentUrls is always an array
+      if (subData.Plan && (!subData.Plan.contentUrls || !Array.isArray(subData.Plan.contentUrls))) {
+        subData.Plan.contentUrls = [];
+      }
+      return subData;
+    });
+
+    res.status(200).json({ message: "All subscriptions fetched", subscriptions: parsedSubscriptions });
 
   } catch (error) {
     res.status(500).json({ message: "Error fetching subscriptions", error: error.message });

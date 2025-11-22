@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'https://dashboard.bameetech.in/api';
+// const API_URL = 'https://dashboard.bameetech.in/api';
 // const API_URL = 'http://147.79.71.235/api';
+const API_URL = import.meta.env.VITE_API_URL ;
 
 const api = axios.create({
   baseURL: API_URL,
