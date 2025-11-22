@@ -12,6 +12,7 @@ import UserProfile from "./pages/user/Profile";
 import SubscriptionPlans from "./pages/user/SubscriptionPlans";
 import UserLeads from "./pages/user/Leads";
 import SubscriberResources from "./pages/user/SubscriberResources";
+import ProtectedContent from "./pages/user/ProtectedContent";
 
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import Users from "./pages/admin/Users";
@@ -84,6 +85,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="user">
                 <SubscriberResources />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/protected-content"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <ProtectedContent />
               </ProtectedRoute>
             }
           />

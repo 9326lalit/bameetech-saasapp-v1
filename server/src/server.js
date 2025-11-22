@@ -21,7 +21,7 @@ const app = express();
 app.use(cors({
   origin: [
     "https://dashboard.bameetech.in",
-    "http://dashboard.bameetech.in"
+    "http://dashboard.bameetech.in",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
@@ -34,6 +34,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/auth', require('./routes/auth.routes'));
+app.use('/otp', require('./routes/otp.routes'));
+app.use('/api/content', require('./routes/contentProxy.routes'));
 app.use('/plans', require('./routes/plan.routes'));
 app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api', require('./routes/lead.routes')); // Changed from '/' to '/api'
@@ -63,14 +65,18 @@ testConnection();
 // Sync database + seeders + then start cron
 syncDatabase().then(async () => {
   try {
-    // Force sync AdminGrant table specifically
-    const { AdminGrant, Plan } = require('./models');
+    // Force sync specific tables
+    const { AdminGrant, Plan, ContentAccess } = require('./models');
     await AdminGrant.sync({ alter: true });
     console.log('✅ AdminGrant table synced successfully');
     
-    // Sync Plan table to add leadTables column
+    // Sync Plan table to add leadTables and contentUrls columns
     await Plan.sync({ alter: true });
-    console.log('✅ Plan table synced (leadTables column added if needed)');
+    console.log('✅ Plan table synced (leadTables and contentUrls columns added if needed)');
+    
+    // Sync ContentAccess table
+    await ContentAccess.sync({ alter: true });
+    console.log('✅ ContentAccess table synced successfully');
     
     await createSuperAdmin();
     await createDemoLeadDatabases();

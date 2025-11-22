@@ -1,189 +1,160 @@
-// import { useState } from 'react';
-// import { Link, useNavigate } from 'react-router-dom';
-// import { login as apiLogin } from '../services/api';
-// import { useAuth } from '../context/AuthContext';
 
-// const Login = () => {
-//   const [formData, setFormData] = useState({
-//     email: '',
-//     password: '',
-//   });
-//   const [error, setError] = useState('');
-//   const [loading, setLoading] = useState(false);
-
-//   const { login } = useAuth();
-//   const navigate = useNavigate();
-
-//   const handleChange = (e) => {
-//     setFormData({
-//       ...formData,
-//       [e.target.name]: e.target.value,
-//     });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError('');
-//     setLoading(true);
-
-//     try {
-//       const response = await apiLogin(formData);
-//       login(response.data.user, response.data.token);
-
-//       // ✅ Store in session storage
-//     sessionStorage.setItem("user", JSON.stringify(response.data.user));
-
-//     // ✅ Optionally token देखील ठेऊ शकतो
-//     sessionStorage.setItem("token", response.data.token);
-//       // Redirect based on user role
-//       if (response.data.user.role === 'super_admin') {
-//         navigate('/super-admin/dashboard');
-//       } else {
-//         navigate('/dashboard');
-//       }
-//     } catch (error) {
-//       setError(error.response?.data?.message || 'Login failed. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-//       <div className="max-w-md w-full mx-4">
-//         <div className="card">
-//           <div className="text-center mb-8">
-//             <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-//               <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-//               </svg>
-//             </div>
-//             <h1 className="text-2xl font-bold text-gray-900">Welcomeeeee back ...</h1>
-//             <p className="text-gray-600 mt-2">Signnnn in to your BameeTech account</p>
-//           </div>
-
-//           {error && (
-//             <div className="alert alert-error mb-6">
-//               {error}
-//             </div>
-//           )}
-
-//           <form onSubmit={handleSubmit} className="space-y-6">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
-//                 Email address
-//               </label>
-//               <input
-//                 type="email"
-//                 id="email"
-//                 name="email"
-//                 className="input"
-//                 placeholder="Enter your email"
-//                 value={formData.email}
-//                 onChange={handleChange}
-//                 required
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">
-//                 Password
-//               </label>
-//               <input
-//                 type="password"
-//                 id="password"
-//                 name="password"
-//                 className="input"
-//                 placeholder="Enter your password"
-//                 value={formData.password}
-//                 onChange={handleChange}
-//                 required
-//               />
-//             </div>
-
-//             <button
-//               type="submit"
-//               className="btn btn-primary w-full py-3 text-base"
-//               disabled={loading}
-//             >
-//               {loading ? (
-//                 <div className="flex items-center justify-center">
-//                   <div className="loading-spinner mr-2"></div>
-//                   Sign in...
-//                 </div>
-//               ) : (
-//                 'Sign in'
-//               )}
-//             </button>
-//           </form>
-
-//           <div className="mt-6 space-y-3 text-center">
-//             <p className="text-gray-600">
-//               Don't have an account?{' '}
-//               <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
-//                 Create account
-//               </Link>
-//             </p>
-//             <div className="border-t border-gray-200 pt-3">
-//               <p className="text-sm text-gray-500">
-//                 BameeTech Administrator?{' '}
-//                 <Link to="/admin-login" className="text-purple-600 hover:text-purple-700 font-medium">
-//                   Admin Login
-//                 </Link>
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
-
-import { useState } from "react";
+import { useRef, useState  , useEffect} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login as apiLogin } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff, Lock } from "lucide-react";
+import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpInputs = useRef([]);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Timer for resend OTP
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  // Handle OTP input
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) {
+      value = value.slice(0, 1);
+    }
+    
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpInputs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit when all 6 digits are entered
+    if (newOtp.every(digit => digit !== '') && index === 5) {
+      handleVerifyOTP(newOtp.join(''));
+    }
+  };
+
+  // Handle backspace
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputs.current[index - 1]?.focus();
+    }
+  };
+
+  // Send OTP
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
+      // First verify credentials
       const response = await apiLogin(formData);
-      login(response.data.user, response.data.token);
+      
+      // If login successful, send OTP
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${API_URL}/otp/send`, {
+        email: formData.email,
+        purpose: 'login'
+      });
 
-      // Store in session storage
-      sessionStorage.setItem("user", JSON.stringify(response.data.user));
-      sessionStorage.setItem("token", response.data.token);
+      // Store user data temporarily
+      sessionStorage.setItem('tempUser', JSON.stringify(response.data.user));
+      sessionStorage.setItem('tempToken', response.data.token);
 
-      if (response.data.user.role === "super_admin") {
-        navigate("/super-admin/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setShowOTP(true);
+      setResendTimer(60);
+      setTimeout(() => otpInputs.current[0]?.focus(), 100);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Verify OTP
+  const handleVerifyOTP = async (otpCode) => {
+    setOtpLoading(true);
+    setError('');
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${API_URL}/otp/verify`, {
+        email: formData.email,
+        otp: otpCode,
+        purpose: 'login'
+      });
+
+      // OTP verified, complete login
+      const tempUser = JSON.parse(sessionStorage.getItem('tempUser'));
+      const tempToken = sessionStorage.getItem('tempToken');
+
+      login(tempUser, tempToken);
+      sessionStorage.setItem("user", JSON.stringify(tempUser));
+      sessionStorage.setItem("token", tempToken);
+
+      // Clean up temp storage
+      sessionStorage.removeItem('tempUser');
+      sessionStorage.removeItem('tempToken');
+
+      // Redirect based on user role
+      if (tempUser.role === 'super_admin') {
+        navigate('/super-admin/dashboard');
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Invalid OTP. Please try again.');
+      setOtp(['', '', '', '', '', '']);
+      otpInputs.current[0]?.focus();
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOTP = async () => {
+    setError('');
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${API_URL}/otp/send`, {
+        email: formData.email,
+        purpose: 'login'
+      });
+      setResendTimer(60);
+      setOtp(['', '', '', '', '', '']);
+      otpInputs.current[0]?.focus();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to resend OTP.');
+    }
+  };
+
+  const handleSubmit = showOTP ? (e) => {
+    e.preventDefault();
+    const otpCode = otp.join('');
+    if (otpCode.length === 6) {
+      handleVerifyOTP(otpCode);
+    }
+  } : handleSendOTP;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -199,27 +170,30 @@ const Login = () => {
             <p className="text-gray-600 mt-1">Sign in to your BameeTech account</p>
           </div>
 
-          {/* Error */}
-          {error && <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4">{error}</div>}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+          {error && (
+            <div className="alert alert-error mb-6">
+              {error}
             </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!showOTP ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="input"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
             {/* Password + Eye Toggle */}
             <div>
@@ -246,14 +220,102 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-full py-3 text-base"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="loading-spinner mr-2"></div>
+                      Verifying credentials...
+                    </div>
+                  ) : (
+                    'Continue'
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Verify your email</h2>
+                  <p className="text-gray-600 text-sm">
+                    We've sent a 6-digit code to<br />
+                    <span className="font-medium text-gray-900">{formData.email}</span>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+                    Enter verification code
+                  </label>
+                  <div className="flex justify-center gap-2 mb-4">
+                    {otp.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => (otpInputs.current[index] = el)}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        disabled={otpLoading}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary w-full py-3 text-base"
+                  disabled={otpLoading || otp.some(digit => !digit)}
+                >
+                  {otpLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="loading-spinner mr-2"></div>
+                      Verifying...
+                    </div>
+                  ) : (
+                    'Verify & Sign in'
+                  )}
+                </button>
+
+                <div className="text-center">
+                  {resendTimer > 0 ? (
+                    <p className="text-sm text-gray-600">
+                      Resend code in <span className="font-medium text-blue-600">{resendTimer}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOTP}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Resend verification code
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOTP(false);
+                    setOtp(['', '', '', '', '', '']);
+                    setError('');
+                  }}
+                  className="text-sm text-gray-600 hover:text-gray-700 w-full text-center"
+                >
+                  ← Back to login
+                </button>
+              </>
+            )}
           </form>
 
           {/* Footer Links */}

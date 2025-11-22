@@ -25,7 +25,8 @@ const createPlan = async (req, res) => {
       leadTables,
       leadTableFields,
       leadLimit,
-      htmlContent 
+      htmlContent,
+      contentUrls 
     } = req.body;
 
     // Handle features field - convert array back to JSON string for database storage
@@ -85,7 +86,28 @@ const createPlan = async (req, res) => {
       }
     }
 
-    console.log('📊 Parsed data:', { name, description, price, duration, features: featuresString, leadDatabaseId, leadTables: leadTablesArray, leadLimit, htmlContent: htmlContent ? 'present' : 'null' });
+    // Handle contentUrls - convert to array if needed
+    let contentUrlsArray = [];
+    if (contentUrls) {
+      if (typeof contentUrls === 'string') {
+        try {
+          contentUrlsArray = JSON.parse(contentUrls);
+        } catch (e) {
+          console.log('⚠️ Invalid contentUrls JSON string:', e.message);
+          contentUrlsArray = [];
+        }
+      } else if (Array.isArray(contentUrls)) {
+        contentUrlsArray = contentUrls;
+      }
+    }
+
+    // Process contentUrls: if password is empty, set it to null (no password needed)
+    contentUrlsArray = contentUrlsArray.map(content => ({
+      ...content,
+      password: content.password && content.password.trim() !== '' ? content.password : null
+    }));
+
+    console.log('📊 Parsed data:', { name, description, price, duration, features: featuresString, leadDatabaseId, leadTables: leadTablesArray, leadLimit, htmlContent: htmlContent ? 'present' : 'null', contentUrls: contentUrlsArray.length });
 
     // Validate required fields
     if (!name || !description || price === undefined || price === null || !duration) {
@@ -149,7 +171,8 @@ const createPlan = async (req, res) => {
       leadTableFields: leadTableFieldsObj,
       leadLimit: leadLimit || null,
       htmlContent: sanitizedHtmlContent,
-      documents
+      documents,
+      contentUrls: contentUrlsArray
     };
     console.log('📊 Plan data to save:', planData);
     
@@ -284,6 +307,11 @@ const getAllPlans = async (req, res) => {
       } else {
         planData.hasHtmlContent = false;
       }
+
+      // Ensure contentUrls is always an array
+      if (!planData.contentUrls || !Array.isArray(planData.contentUrls)) {
+        planData.contentUrls = [];
+      }
       
       return planData;
     });
@@ -310,7 +338,8 @@ const updatePlan = async (req, res) => {
       leadTables,
       leadTableFields,
       leadLimit,
-      htmlContent 
+      htmlContent,
+      contentUrls 
     } = req.body;
 
     // Handle features field - convert array back to JSON string for database storage
@@ -371,6 +400,29 @@ const updatePlan = async (req, res) => {
         leadTableFieldsObj = {};
       }
     }
+
+    // Handle contentUrls
+    let contentUrlsArray = plan.contentUrls || [];
+    if (contentUrls !== undefined) {
+      if (typeof contentUrls === 'string') {
+        try {
+          contentUrlsArray = JSON.parse(contentUrls);
+        } catch (e) {
+          console.log('⚠️ Invalid contentUrls JSON string:', e.message);
+          contentUrlsArray = [];
+        }
+      } else if (Array.isArray(contentUrls)) {
+        contentUrlsArray = contentUrls;
+      } else if (contentUrls === null) {
+        contentUrlsArray = [];
+      }
+    }
+
+    // Process contentUrls: if password is empty, set it to null (no password needed)
+    contentUrlsArray = contentUrlsArray.map(content => ({
+      ...content,
+      password: content.password && content.password.trim() !== '' ? content.password : null
+    }));
     
     // Allow any HTML content for admin users
     let sanitizedHtmlContent = plan.htmlContent;
@@ -406,7 +458,8 @@ const updatePlan = async (req, res) => {
       leadTableFields: leadTableFieldsObj,
       leadLimit: leadLimit || null,
       htmlContent: sanitizedHtmlContent,
-      documents
+      documents,
+      contentUrls: contentUrlsArray
     });
     
     res.status(200).json({

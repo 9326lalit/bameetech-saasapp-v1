@@ -57,6 +57,21 @@ const Plan = sequelize.define('Plan', {
     type: DataTypes.JSON,
     defaultValue: []
   },
+  // WordPress protected content URLs
+  contentUrls: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+    // Structure: [
+    //   {
+    //     id: "unique-id",
+    //     title: "Module 1: Introduction",
+    //     url: "https://yourwordpress.com/module-1",
+    //     password: "wp_password_here",
+    //     description: "Learn the basics",
+    //     order: 1
+    //   }
+    // ]
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

@@ -5,10 +5,10 @@ const { Op } = require('sequelize');
 // Grant access to existing user
 const grantAccessToExistingUser = async (req, res) => {
   try {
-    const { userId, planIds } = req.body;
+    const { userId, planIds, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
 
-    console.log('🔑 Granting access to existing user:', { userId, planIds });
+    console.log('🔑 Granting access to existing user:', { userId, planIds, planDurations });
 
     // Validate input
     if (!userId || !planIds || !Array.isArray(planIds) || planIds.length === 0) {
@@ -65,11 +65,15 @@ const grantAccessToExistingUser = async (req, res) => {
     // Create new subscriptions for all granted plans
     const subscriptions = [];
     for (const planId of adminGrant.planIds) {
+      // Get duration for this specific plan, default to 365 days if not specified
+      const durationDays = planDurations[planId] || 365;
+      const durationInMs = durationDays * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+      
       const subscription = await Subscription.create({
         userId,
         planId,
         startDate: new Date(),
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+        endDate: new Date(Date.now() + durationInMs),
         status: 'active',
         amount: 0,
         paymentId: 'admin_granted',
@@ -174,7 +178,7 @@ const createSubscriber = async (req, res) => {
     console.log('📝 Create subscriber request body:', req.body);
     console.log('👤 Admin ID:', req.user?.id);
     
-    const { name, email, password, planIds } = req.body;
+    const { name, email, password, planIds, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
 
     // Validate input
@@ -234,11 +238,15 @@ const createSubscriber = async (req, res) => {
     const subscriptions = [];
     for (const planId of planIds) {
       const plan = plans.find(p => p.id === planId);
+      // Get duration for this specific plan, default to 365 days if not specified
+      const durationDays = planDurations[planId] || 365;
+      const durationInMs = durationDays * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+      
       const subscription = await Subscription.create({
         userId: user.id,
         planId: planId,
         startDate: new Date(),
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+        endDate: new Date(Date.now() + durationInMs),
         status: 'active',
         amount: 0, // Admin granted, no payment
         paymentId: 'admin_granted',
@@ -288,21 +296,30 @@ const getAdminGrantedSubscribers = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const formattedSubscribers = adminGrants.map(grant => ({
-      id: grant.User.id,
-      name: grant.User.name,
-      email: grant.User.email,
-      isActive: grant.isActive && grant.User.isActive,
-      grantedPlanIds: grant.planIds,
-      grantedAt: grant.createdAt,
-      createdAt: grant.User.createdAt,
-      activeSubscriptions: grant.User.Subscriptions.filter(sub => 
-        sub.status === 'active' && new Date(sub.endDate) > new Date()
-      ).length,
-      totalSubscriptions: grant.User.Subscriptions.length,
-      plans: grant.User.Subscriptions.map(sub => sub.Plan).filter(Boolean),
-      grantId: grant.id
-    }));
+    // Get all valid plan IDs
+    const allPlans = await Plan.findAll({ attributes: ['id'] });
+    const validPlanIds = allPlans.map(p => p.id);
+
+    const formattedSubscribers = adminGrants.map(grant => {
+      // Filter out any invalid plan IDs
+      const filteredPlanIds = (grant.planIds || []).filter(id => validPlanIds.includes(id));
+      
+      return {
+        id: grant.User.id,
+        name: grant.User.name,
+        email: grant.User.email,
+        isActive: grant.isActive && grant.User.isActive,
+        grantedPlanIds: filteredPlanIds,
+        grantedAt: grant.createdAt,
+        createdAt: grant.User.createdAt,
+        activeSubscriptions: grant.User.Subscriptions.filter(sub => 
+          sub.status === 'active' && new Date(sub.endDate) > new Date()
+        ).length,
+        totalSubscriptions: grant.User.Subscriptions.length,
+        plans: grant.User.Subscriptions.map(sub => sub.Plan).filter(Boolean),
+        grantId: grant.id
+      };
+    });
 
     res.status(200).json({
       message: 'Admin-granted subscribers fetched successfully',
@@ -321,8 +338,17 @@ const getAdminGrantedSubscribers = async (req, res) => {
 const updateSubscriberAccess = async (req, res) => {
   try {
     const { subscriberId } = req.params;
-    const { planIds, isActive } = req.body;
+    const { planIds, isActive, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
+
+    console.log('🔄 Update subscriber access request:', {
+      subscriberId,
+      planIds,
+      isActive,
+      planDurations,
+      planIdsType: typeof planIds,
+      isArray: Array.isArray(planIds)
+    });
 
     // Find admin grant record
     const adminGrant = await AdminGrant.findOne({
@@ -335,23 +361,51 @@ const updateSubscriberAccess = async (req, res) => {
     });
 
     if (!adminGrant) {
+      console.log('❌ Admin grant not found for user:', subscriberId);
       return res.status(404).json({ message: 'Admin-granted subscriber not found' });
     }
 
     const subscriber = adminGrant.User;
+    console.log('✅ Found subscriber:', subscriber.email);
 
     // Update grant status if provided
     if (typeof isActive === 'boolean') {
+      console.log('📝 Updating isActive status to:', isActive);
       adminGrant.isActive = isActive;
       subscriber.isActive = isActive;
     }
 
+    // Clean up any invalid plan IDs from existing grant
+    const allPlans = await Plan.findAll({ attributes: ['id'] });
+    const validPlanIds = allPlans.map(p => p.id);
+    const currentPlanIds = (adminGrant.planIds || []).filter(id => validPlanIds.includes(id));
+    
+    // If current plan IDs were cleaned up, update the grant
+    if (currentPlanIds.length !== (adminGrant.planIds || []).length) {
+      console.log('🧹 Cleaning up invalid plan IDs from grant');
+      adminGrant.planIds = currentPlanIds;
+    }
+
     // Update granted plans if provided
     if (planIds && Array.isArray(planIds)) {
+      console.log('📋 Validating plan IDs:', planIds);
+      
       // Verify all plan IDs exist
       const plans = await Plan.findAll({ where: { id: planIds } });
+      console.log('✅ Found plans:', plans.map(p => ({ id: p.id, name: p.name })));
+      
       if (plans.length !== planIds.length) {
-        return res.status(400).json({ message: 'One or more invalid plan IDs' });
+        console.log('❌ Plan validation failed:', {
+          requested: planIds,
+          found: plans.map(p => p.id),
+          missing: planIds.filter(id => !plans.find(p => p.id === id))
+        });
+        return res.status(400).json({ 
+          message: 'One or more invalid plan IDs',
+          requested: planIds,
+          found: plans.map(p => p.id),
+          missing: planIds.filter(id => !plans.find(p => p.id === id))
+        });
       }
 
       // Update granted plan IDs
@@ -367,11 +421,15 @@ const updateSubscriberAccess = async (req, res) => {
 
       // Create new subscriptions for granted plans
       for (const planId of planIds) {
+        // Get duration for this specific plan, default to 365 days if not specified
+        const durationDays = planDurations[planId] || 365;
+        const durationInMs = durationDays * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+        
         await Subscription.create({
           userId: subscriberId,
           planId: planId,
           startDate: new Date(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          endDate: new Date(Date.now() + durationInMs),
           status: 'active',
           amount: 0,
           paymentId: 'admin_granted',
@@ -382,6 +440,8 @@ const updateSubscriberAccess = async (req, res) => {
 
     await adminGrant.save();
     await subscriber.save();
+
+    console.log('✅ Subscriber access updated successfully');
 
     res.status(200).json({
       message: 'Subscriber access updated successfully',
@@ -394,6 +454,7 @@ const updateSubscriberAccess = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Error updating subscriber access:', error);
     res.status(500).json({ 
       message: 'Error updating subscriber access', 
       error: error.message 

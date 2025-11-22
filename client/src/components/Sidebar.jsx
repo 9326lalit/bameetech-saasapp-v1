@@ -7,6 +7,7 @@ import {
   User,
   Tag,
   Database,
+  Lock,
   LogOut,
   Building2,
   Settings,
@@ -35,6 +36,7 @@ const Sidebar = () => {
     user: User,
     tag: Tag,
     database: Database,
+    lock: Lock,
     // settings: Settings,
     // analytics: BarChart3,
   };
@@ -43,6 +45,7 @@ const Sidebar = () => {
     { to: "/dashboard", label: "Dashboard", icon: "home" },
     { to: "/leads", label: "Leads", icon: "users" },
     { to: "/resources", label: "My Resources", icon: "database" },
+    { to: "/protected-content", label: "Protected Content", icon: "lock" },
     { to: "/subscription-plans", label: "Subscription", icon: "credit-card" },
     { to: "/profile", label: "Profile", icon: "user" },
   ];

@@ -1,6 +1,6 @@
 // src/pages/PlanManagement.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { getAllPlans, createPlan, updatePlan, deletePlan, getAllLeadDatabases } from '../../services/api';
+import { getAllPlans, createPlan, updatePlan, deletePlan } from '../../services/api';
 import { Plus, Loader2 } from 'lucide-react';
 import Layout from '../../components/Layout';
 import PlanModal from './Plans/PlanModal';
@@ -8,7 +8,6 @@ import PlanList from './Plans/PlanList';
 
 const PlanManagement = () => {
   const [plans, setPlans] = useState([]);
-  const [leadDatabases, setLeadDatabases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentPlan, setCurrentPlan] = useState(null);
@@ -19,15 +18,12 @@ const PlanManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      // Expect APIs to return { data: [...] }
-      const [plansRes, dbRes] = await Promise.all([getAllPlans(), getAllLeadDatabases()]);
+      const plansRes = await getAllPlans();
       const plansData = plansRes?.data || [];
-      // IMPORTANT: ensure each plan has `LeadDatabase` included by backend
       setPlans(plansData);
-      setLeadDatabases(dbRes?.data || []);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load plans and databases. Please check the API.');
+      setError('Failed to load plans. Please check the API.');
     } finally {
       setLoading(false);
     }
@@ -67,7 +63,7 @@ const PlanManagement = () => {
     // Build FormData for file upload / multipart endpoints
     const dataToSend = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (key === 'features' || key === 'leadTables') {
+      if (key === 'features' || key === 'leadTables' || key === 'contentUrls') {
         // Serialize arrays as JSON
         dataToSend.append(key, JSON.stringify(value || []));
       } else if (key === 'leadDatabaseIds' || key === 'selectedFields' || key === 'leadLimits' || key === 'leadTableFields') {
@@ -153,7 +149,6 @@ const PlanManagement = () => {
           onClose={() => { setShowModal(false); setCurrentPlan(null); setError(null); }}
           onSubmit={handleModalSubmit}
           plan={currentPlan}
-          leadDatabases={leadDatabases}
           isSubmitting={isSubmitting}
         />
       </div>
