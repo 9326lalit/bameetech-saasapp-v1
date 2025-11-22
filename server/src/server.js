@@ -14,10 +14,19 @@ const app = express();
 
 // Middleware
 // app.use(cors());
+// app.use(cors({
+//   origin: 'http://147.79.71.235',
+//   credentials: true
+// }));
 app.use(cors({
-  origin: 'http://147.79.71.235',
+  origin: [
+    "https://dashboard.bameetech.in",
+    "http://dashboard.bameetech.in"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Serve uploaded files statically

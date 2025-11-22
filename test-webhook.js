@@ -7,7 +7,8 @@
 
 const axios = require('axios');
 
-const API_URL = 'http://147.79.71.235/api';
+// const API_URL = 'http://147.79.71.235/api';
+const API_URL = 'http://dashboard.bameetech.in/api';
 
 // Test data for different forms
 const testLeads = [
