@@ -32,11 +32,13 @@ const SubscriberManagement = () => {
     name: '',
     email: '',
     password: '',
-    planIds: []
+    planIds: [],
+    planDurations: {} // Store duration per plan: { planId: days }
   });
   const [grantData, setGrantData] = useState({
     userId: null,
-    planIds: []
+    planIds: [],
+    planDurations: {} // Store duration per plan: { planId: days }
   });
 
   useEffect(() => {
@@ -85,7 +87,7 @@ const SubscriberManagement = () => {
       await createAdminSubscriber(formData);
       toast.success('Subscriber created successfully');
       setShowCreateModal(false);
-      setFormData({ name: '', email: '', password: '', planIds: [] });
+      setFormData({ name: '', email: '', password: '', planIds: [], planDurations: {} });
       setExistingUserError(null);
       fetchData();
     } catch (error) {
@@ -110,11 +112,12 @@ const SubscriberManagement = () => {
     try {
       await grantAccessToExistingUser({
         userId: existingUserError.existingUser.id,
-        planIds: formData.planIds
+        planIds: formData.planIds,
+        planDurations: formData.planDurations
       });
       toast.success('Access granted successfully to existing user');
       setShowCreateModal(false);
-      setFormData({ name: '', email: '', password: '', planIds: [] });
+      setFormData({ name: '', email: '', password: '', planIds: [], planDurations: {} });
       setExistingUserError(null);
       fetchData();
     } catch (error) {
@@ -153,7 +156,7 @@ const SubscriberManagement = () => {
       await grantAccessToExistingUser(grantData);
       toast.success('Access granted successfully');
       setShowGrantModal(false);
-      setGrantData({ userId: null, planIds: [] });
+      setGrantData({ userId: null, planIds: [], planDurations: {} });
       setSearchQuery('');
       setSearchResults([]);
       fetchData();
@@ -166,20 +169,28 @@ const SubscriberManagement = () => {
   const handleUpdateSubscriber = async (e) => {
     e.preventDefault();
     
-    if (!selectedSubscriber || formData.planIds.length === 0) {
-      toast.error('Please select at least one plan');
+    if (!selectedSubscriber) {
+      toast.error('No subscriber selected');
       return;
     }
 
+    // Allow empty planIds to remove all access
     try {
       await updateSubscriberAccess(selectedSubscriber.id, {
         planIds: formData.planIds,
+        planDurations: formData.planDurations,
         isActive: formData.isActive
       });
-      toast.success('Subscriber access updated successfully');
+      
+      if (formData.planIds.length === 0) {
+        toast.success('All access removed from subscriber');
+      } else {
+        toast.success('Subscriber access updated successfully');
+      }
+      
       setShowEditModal(false);
       setSelectedSubscriber(null);
-      setFormData({ name: '', email: '', password: '', planIds: [] });
+      setFormData({ name: '', email: '', password: '', planIds: [], planDurations: {} });
       fetchData();
     } catch (error) {
       console.error('Error updating subscriber:', error);
@@ -204,11 +215,23 @@ const SubscriberManagement = () => {
 
   const openEditModal = (subscriber) => {
     setSelectedSubscriber(subscriber);
+    // Filter out any plan IDs that no longer exist
+    const validPlanIds = (subscriber.grantedPlanIds || []).filter(id => 
+      plans.some(plan => plan.id === id)
+    );
+    
+    // Initialize planDurations with default 30 days for each plan
+    const initialDurations = {};
+    validPlanIds.forEach(planId => {
+      initialDurations[planId] = 30; // Default 30 days
+    });
+    
     setFormData({
       name: subscriber.name,
       email: subscriber.email,
       password: '',
-      planIds: subscriber.grantedPlanIds || [],
+      planIds: validPlanIds,
+      planDurations: initialDurations,
       isActive: subscriber.isActive
     });
     setShowEditModal(true);
@@ -494,25 +517,69 @@ const SubscriberManagement = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Grant Access to Plans</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                  <div className="space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                     {plans.map((plan) => (
-                      <label key={plan.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={grantData.planIds.includes(plan.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setGrantData({ ...grantData, planIds: [...grantData.planIds, plan.id] });
-                            } else {
-                              setGrantData({ ...grantData, planIds: grantData.planIds.filter(id => id !== plan.id) });
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700">{plan.name}</span>
-                      </label>
+                      <div key={plan.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                        <label className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            checked={grantData.planIds.includes(plan.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setGrantData({ 
+                                  ...grantData, 
+                                  planIds: [...grantData.planIds, plan.id],
+                                  planDurations: { ...grantData.planDurations, [plan.id]: 30 }
+                                });
+                              } else {
+                                const newPlanIds = grantData.planIds.filter(id => id !== plan.id);
+                                const newDurations = { ...grantData.planDurations };
+                                delete newDurations[plan.id];
+                                setGrantData({ ...grantData, planIds: newPlanIds, planDurations: newDurations });
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium text-gray-700">{plan.name}</span>
+                        </label>
+                        {grantData.planIds.includes(plan.id) && (
+                          <div className="ml-6">
+                            <label className="block text-xs text-gray-600 mb-1">Duration (days)</label>
+                            <input
+                              type="number"
+                              value={grantData.planDurations[plan.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setGrantData({
+                                  ...grantData,
+                                  planDurations: {
+                                    ...grantData.planDurations,
+                                    [plan.id]: value === '' ? '' : parseInt(value) || 1
+                                  }
+                                });
+                              }}
+                              onBlur={(e) => {
+                                // Set to 1 if empty on blur
+                                if (e.target.value === '') {
+                                  setGrantData({
+                                    ...grantData,
+                                    planDurations: {
+                                      ...grantData.planDurations,
+                                      [plan.id]: 1
+                                    }
+                                  });
+                                }
+                              }}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                              min="1"
+                              placeholder="Enter days"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">Set individual duration for each plan</p>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -520,7 +587,7 @@ const SubscriberManagement = () => {
                     type="button"
                     onClick={() => {
                       setShowGrantModal(false);
-                      setGrantData({ userId: null, planIds: [] });
+                      setGrantData({ userId: null, planIds: [], planDurations: {} });
                       setSearchQuery('');
                       setSearchResults([]);
                     }}
@@ -619,25 +686,69 @@ const SubscriberManagement = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Grant Access to Plans</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                  <div className="space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                     {plans.map((plan) => (
-                      <label key={plan.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.planIds.includes(plan.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({ ...formData, planIds: [...formData.planIds, plan.id] });
-                            } else {
-                              setFormData({ ...formData, planIds: formData.planIds.filter(id => id !== plan.id) });
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700">{plan.name}</span>
-                      </label>
+                      <div key={plan.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                        <label className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.planIds.includes(plan.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ 
+                                  ...formData, 
+                                  planIds: [...formData.planIds, plan.id],
+                                  planDurations: { ...formData.planDurations, [plan.id]: 30 }
+                                });
+                              } else {
+                                const newPlanIds = formData.planIds.filter(id => id !== plan.id);
+                                const newDurations = { ...formData.planDurations };
+                                delete newDurations[plan.id];
+                                setFormData({ ...formData, planIds: newPlanIds, planDurations: newDurations });
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium text-gray-700">{plan.name}</span>
+                        </label>
+                        {formData.planIds.includes(plan.id) && (
+                          <div className="ml-6">
+                            <label className="block text-xs text-gray-600 mb-1">Duration (days)</label>
+                            <input
+                              type="number"
+                              value={formData.planDurations[plan.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  planDurations: {
+                                    ...formData.planDurations,
+                                    [plan.id]: value === '' ? '' : parseInt(value) || 1
+                                  }
+                                });
+                              }}
+                              onBlur={(e) => {
+                                // Set to 1 if empty on blur
+                                if (e.target.value === '') {
+                                  setFormData({
+                                    ...formData,
+                                    planDurations: {
+                                      ...formData.planDurations,
+                                      [plan.id]: 1
+                                    }
+                                  });
+                                }
+                              }}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              min="1"
+                              placeholder="Enter days"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">Set individual duration for each plan</p>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -645,7 +756,7 @@ const SubscriberManagement = () => {
                     type="button"
                     onClick={() => {
                       setShowCreateModal(false);
-                      setFormData({ name: '', email: '', password: '', planIds: [] });
+                      setFormData({ name: '', email: '', password: '', planIds: [], planDurations: {} });
                       setExistingUserError(null);
                     }}
                     className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -688,25 +799,69 @@ const SubscriberManagement = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Grant Access to Plans</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                  <div className="space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                     {plans.map((plan) => (
-                      <label key={plan.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.planIds.includes(plan.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({ ...formData, planIds: [...formData.planIds, plan.id] });
-                            } else {
-                              setFormData({ ...formData, planIds: formData.planIds.filter(id => id !== plan.id) });
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700">{plan.name}</span>
-                      </label>
+                      <div key={plan.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                        <label className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.planIds.includes(plan.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ 
+                                  ...formData, 
+                                  planIds: [...formData.planIds, plan.id],
+                                  planDurations: { ...formData.planDurations, [plan.id]: 30 }
+                                });
+                              } else {
+                                const newPlanIds = formData.planIds.filter(id => id !== plan.id);
+                                const newDurations = { ...formData.planDurations };
+                                delete newDurations[plan.id];
+                                setFormData({ ...formData, planIds: newPlanIds, planDurations: newDurations });
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium text-gray-700">{plan.name}</span>
+                        </label>
+                        {formData.planIds.includes(plan.id) && (
+                          <div className="ml-6">
+                            <label className="block text-xs text-gray-600 mb-1">Duration (days)</label>
+                            <input
+                              type="number"
+                              value={formData.planDurations[plan.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  planDurations: {
+                                    ...formData.planDurations,
+                                    [plan.id]: value === '' ? '' : parseInt(value) || 1
+                                  }
+                                });
+                              }}
+                              onBlur={(e) => {
+                                // Set to 1 if empty on blur
+                                if (e.target.value === '') {
+                                  setFormData({
+                                    ...formData,
+                                    planDurations: {
+                                      ...formData.planDurations,
+                                      [plan.id]: 1
+                                    }
+                                  });
+                                }
+                              }}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              min="1"
+                              placeholder="Enter days"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">Set individual duration for each plan</p>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -715,7 +870,7 @@ const SubscriberManagement = () => {
                     onClick={() => {
                       setShowEditModal(false);
                       setSelectedSubscriber(null);
-                      setFormData({ name: '', email: '', password: '', planIds: [] });
+                      setFormData({ name: '', email: '', password: '', planIds: [], planDurations: {} });
                     }}
                     className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
