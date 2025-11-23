@@ -21,8 +21,7 @@ const app = express();
 app.use(cors({
   origin: [
     "https://dashboard.bameetech.in",
-    "http://dashboard.bameetech.in",
-    "http://localhost:5173"
+    
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
