@@ -887,10 +887,10 @@
         });
         uploadRequest.execute(file => {
             console.log('File uploaded:', file);
-            alert(Successfully uploaded to Google Drive! File name: ${ file.name });
+            alert(`Successfully uploaded to Google Drive! File name: ${ file.name }`);
         });
-                }, 'image/png');
-            }
+            }, 'image/png');
+        }
 
         async function uploadToServer() {
             dom.gdriveBtn.textContent = "Uploading...";

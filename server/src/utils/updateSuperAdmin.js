@@ -21,15 +21,11 @@ const updateSuperAdmin = async () => {
         password: hashedPassword,
         role: 'super_admin'
       });
-      
-      console.log('Super admin updated successfully');
-      
+            
       // Test the password
       const isPasswordValid = await user.comparePassword('1511@Bameetech');
-      console.log('Password test after update:', isPasswordValid);
       
     } else {
-      console.log('User not found');
     }
     
   } catch (error) {

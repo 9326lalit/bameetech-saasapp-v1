@@ -62,7 +62,6 @@
     // Sync modal state with the plan prop
     useEffect(() => {
       if (plan) {
-        console.log('📥 Loading plan into modal:', plan);
         
         // Parse leadTables if it's a string
         let parsedLeadTables = [];
@@ -104,13 +103,11 @@
           isActive: plan.isActive ?? true,
         });
         
-        console.log('📥 Initialized formData with leadTables:', parsedLeadTables);
         
         // Optionally handle existing documents here if the API provides them
         setSelectedFiles([]); 
       } else {
         setFormData(initialFormData);
-        console.log('📥 Reset to initial form data');
       }
     }, [plan]);
 
@@ -135,7 +132,6 @@
     };
 
     const handleLeadTableToggle = (tableValue) => {
-      console.log('🔄 handleLeadTableToggle called with:', tableValue);
       
       setFormData(prev => {
         const currentTables = Array.isArray(prev.leadTables) ? prev.leadTables : [];
@@ -154,14 +150,7 @@
         if (isSelected) {
           delete newLeadTableFields[tableValue];
         }
-        
-        console.log('📊 State update:', {
-          previousState: prev,
-          currentTables,
-          isSelected,
-          newTables,
-          tableValue
-        });
+      
         
         const newState = {
           ...prev,
@@ -169,7 +158,6 @@
           leadTableFields: newLeadTableFields
         };
         
-        console.log('📊 New state:', newState);
         
         return newState;
       });
@@ -178,9 +166,6 @@
     const handleFormSubmit = (e) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent any parent form submission
-
-      console.log('📤 Form submit triggered');
-      console.log('📤 Current formData state:', formData);
 
       // 1. Process Features String to Array
       const featuresArray = formData.features.split('\n')
@@ -199,8 +184,6 @@
           isActive: formData.isActive
       };
 
-      console.log('📤 Submitting plan with leadTables:', finalFormData.leadTables);
-      console.log('📤 Full form data:', finalFormData);
 
       onSubmit(finalFormData, selectedFiles);
     };
@@ -294,8 +277,7 @@
                               checked={(formData.leadTables || []).includes(table.value)}
                               onChange={(e) => {
                                 e.stopPropagation(); // Prevent event bubbling
-                                console.log('Checkbox clicked:', table.value);
-                                console.log('Current leadTables:', formData.leadTables);
+                               
                                 handleLeadTableToggle(table.value);
                               }}
                               onClick={(e) => {

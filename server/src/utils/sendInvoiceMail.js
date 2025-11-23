@@ -75,7 +75,6 @@ const sendInvoiceMail = async (user, plan, subscription, payment) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("✅ Invoice email sent successfully to", user.email);
   } catch (err) {
     console.error("❌ Error sending invoice email:", err.message);
   }

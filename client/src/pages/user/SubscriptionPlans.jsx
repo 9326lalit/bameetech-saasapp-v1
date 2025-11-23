@@ -51,14 +51,12 @@ const SubscriptionPlans = () => {
         getUserSubscription().catch(() => ({ data: [] }))
       ]);
 
-      console.log('📋 Plans received from API:', plansResponse.data);
       // Check if any plan has htmlContent (it shouldn't)
       plansResponse.data?.forEach(plan => {
         if (plan.htmlContent) {
           console.error('❌ SECURITY ISSUE: Plan', plan.id, 'contains HTML content in public endpoint!');
         } else {
-          console.log('✅ Plan', plan.id, 'correctly has no HTML content, hasHtmlContent:', plan.hasHtmlContent);
-        }
+          console.log('✅ Plan', plan.id, 'HTML content check passed.');}
       });
 
       setPlans(plansResponse.data || []);
@@ -152,7 +150,7 @@ const SubscriptionPlans = () => {
             showToast('Payment successful! Subscription activated.', 'success');
             setTimeout(() => {
               fetchData();
-              navigate('/user-dashboard');
+              navigate('/dashboard');
             }, 1500);
           } catch (error) {
             console.error('Payment verification error:', error);

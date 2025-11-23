@@ -96,7 +96,6 @@ const sendOTP = async (req, res) => {
     // Send OTP email
     await sendOTPEmail(email, otp, purpose);
     
-    console.log(`📧 OTP sent to ${email} for ${purpose}`);
     
     res.status(200).json({
       success: true,
@@ -168,7 +167,6 @@ const verifyOTP = async (req, res) => {
     // Mark OTP as verified
     await otpRecord.update({ verified: true });
     
-    console.log(`✅ OTP verified for ${email}`);
     
     res.status(200).json({
       success: true,

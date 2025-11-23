@@ -83,7 +83,6 @@ const SubscriberManagement = () => {
     }
 
     try {
-      console.log('📤 Sending form data:', formData);
       await createAdminSubscriber(formData);
       toast.success('Subscriber created successfully');
       setShowCreateModal(false);

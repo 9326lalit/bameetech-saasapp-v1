@@ -5,7 +5,6 @@ const getTableFields = async (req, res) => {
   try {
     const { tableName } = req.params;
     
-    console.log(`📋 Fetching fields for table: ${tableName}`);
     
     let fields = [];
     const dialect = sequelize.getDialect();
@@ -23,7 +22,6 @@ const getTableFields = async (req, res) => {
           !['id', 'created_at', 'updated_at'].includes(key.toLowerCase())
         );
         
-        console.log(`✅ Found ${fields.length} fields from sample record:`, fields);
       }
     } catch (sampleError) {
       console.log('⚠️ No sample record found, trying schema query...');

@@ -11,9 +11,7 @@ const razorpay = new Razorpay({
 
 const createPlan = async (req, res) => {
   try {
-    console.log('📝 Create plan request received');
-    console.log('📋 Request body:', req.body);
-    console.log('📁 Files:', req.files ? req.files.length : 0);
+   
     
     let { 
       name, 
@@ -38,7 +36,6 @@ const createPlan = async (req, res) => {
           JSON.parse(features); // Validate it's valid JSON
           featuresString = features;
         } catch (e) {
-          console.log('⚠️ Invalid features JSON string:', e.message);
           featuresString = JSON.stringify([]);
         }
       } else if (Array.isArray(features)) {
@@ -63,7 +60,6 @@ const createPlan = async (req, res) => {
         try {
           leadTablesArray = JSON.parse(leadTables);
         } catch (e) {
-          console.log('⚠️ Invalid leadTables JSON string:', e.message);
           leadTablesArray = [];
         }
       } else if (Array.isArray(leadTables)) {
@@ -78,7 +74,6 @@ const createPlan = async (req, res) => {
         try {
           leadTableFieldsObj = JSON.parse(leadTableFields);
         } catch (e) {
-          console.log('⚠️ Invalid leadTableFields JSON string:', e.message);
           leadTableFieldsObj = {};
         }
       } else if (typeof leadTableFields === 'object') {
@@ -93,7 +88,6 @@ const createPlan = async (req, res) => {
         try {
           contentUrlsArray = JSON.parse(contentUrls);
         } catch (e) {
-          console.log('⚠️ Invalid contentUrls JSON string:', e.message);
           contentUrlsArray = [];
         }
       } else if (Array.isArray(contentUrls)) {
@@ -107,16 +101,10 @@ const createPlan = async (req, res) => {
       password: content.password && content.password.trim() !== '' ? content.password : null
     }));
 
-    console.log('📊 Parsed data:', { name, description, price, duration, features: featuresString, leadDatabaseId, leadTables: leadTablesArray, leadLimit, htmlContent: htmlContent ? 'present' : 'null', contentUrls: contentUrlsArray.length });
 
     // Validate required fields
     if (!name || !description || price === undefined || price === null || !duration) {
-      console.log('❌ Missing required fields:', { 
-        name: !!name, 
-        description: !!description, 
-        price: price, 
-        duration: !!duration 
-      });
+    
       return res.status(400).json({ 
         message: 'Missing required fields: name, description, price, and duration are required',
         received: { name, description, price, duration }
@@ -125,7 +113,6 @@ const createPlan = async (req, res) => {
 
     // Validate data types
     if (isNaN(price) || price < 0) {
-      console.log('❌ Invalid price:', price);
       return res.status(400).json({ 
         message: 'Price must be a valid positive number',
         received: { price }
@@ -133,7 +120,6 @@ const createPlan = async (req, res) => {
     }
 
     if (isNaN(duration) || duration < 1) {
-      console.log('❌ Invalid duration:', duration);
       return res.status(400).json({ 
         message: 'Duration must be a valid positive number (days)',
         received: { duration }
@@ -143,7 +129,6 @@ const createPlan = async (req, res) => {
     // Allow any HTML content for admin users
     let sanitizedHtmlContent = htmlContent || null;
     if (htmlContent) {
-      console.log('📝 HTML content received, length:', htmlContent.length);
     }
 
     // Handle uploaded documents
@@ -159,7 +144,6 @@ const createPlan = async (req, res) => {
     }
 
     // 1️⃣ First, create in DB
-    console.log('💾 Creating plan in database...');
     const planData = {
       name,
       description,
@@ -174,12 +158,10 @@ const createPlan = async (req, res) => {
       documents,
       contentUrls: contentUrlsArray
     };
-    console.log('📊 Plan data to save:', planData);
     
     let plan;
     try {
       plan = await Plan.create(planData);
-      console.log('✅ Plan created successfully with ID:', plan.id);
     } catch (dbError) {
       console.error('❌ Database error:', dbError);
       if (dbError.name === 'SequelizeValidationError') {
@@ -225,52 +207,6 @@ const createPlan = async (req, res) => {
 };
 
 
-// const createPlan = async (req, res) => {
-//   try {
-//     const { 
-//       name, 
-//       description, 
-//       price, 
-//       duration, 
-//       features, 
-//       leadDatabaseId,
-//       leadLimit,
-//       htmlContent 
-//     } = req.body;
-    
-//     // Handle uploaded documents
-//     let documents = [];
-//     if (req.files && req.files.length > 0) {
-//       documents = req.files.map(file => ({
-//         originalName: file.originalname,
-//         filename: file.filename,
-//         path: file.path,
-//         size: file.size,
-//         mimetype: file.mimetype
-//       }));
-//     }
-    
-//     const plan = await Plan.create({
-//       name,
-//       description,
-//       price,
-//       duration,
-//       features,
-//       leadDatabaseId: leadDatabaseId || null,
-//       leadLimit: leadLimit || null,
-//       htmlContent: htmlContent || null,
-//       documents
-//     });
-    
-//     res.status(201).json({
-//       message: 'Plan created successfully',
-//       plan,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error creating plan', error: error.message });
-//   }
-// };
-
 const getAllPlans = async (req, res) => {
   try {
     const plans = await Plan.findAll({
@@ -291,7 +227,6 @@ const getAllPlans = async (req, res) => {
         try {
           planData.features = JSON.parse(planData.features);
         } catch (e) {
-          console.log('⚠️ Failed to parse features for plan', plan.id, ':', e.message);
           planData.features = [];
         }
       } else {
@@ -301,7 +236,6 @@ const getAllPlans = async (req, res) => {
       // Remove HTML content from public endpoint (premium feature)
       // Only show indicator that content exists
       if (planData.htmlContent) {
-        console.log(`🔒 Removing HTML content for plan ${plan.id} from public endpoint`);
         planData.hasHtmlContent = true;
         delete planData.htmlContent; // Don't send actual content
       } else {
@@ -316,7 +250,6 @@ const getAllPlans = async (req, res) => {
       return planData;
     });
     
-    console.log(`📋 Sending ${parsedPlans.length} plans to public endpoint (HTML content removed)`);
     
     res.status(200).json(parsedPlans);
   } catch (error) {
@@ -351,7 +284,6 @@ const updatePlan = async (req, res) => {
           JSON.parse(features); // Validate it's valid JSON
           featuresString = features;
         } catch (e) {
-          console.log('⚠️ Invalid features JSON string:', e.message);
           featuresString = JSON.stringify([]);
         }
       } else if (Array.isArray(features)) {
@@ -374,7 +306,6 @@ const updatePlan = async (req, res) => {
         try {
           leadTablesArray = JSON.parse(leadTables);
         } catch (e) {
-          console.log('⚠️ Invalid leadTables JSON string:', e.message);
           leadTablesArray = [];
         }
       } else if (Array.isArray(leadTables)) {
@@ -391,7 +322,6 @@ const updatePlan = async (req, res) => {
         try {
           leadTableFieldsObj = JSON.parse(leadTableFields);
         } catch (e) {
-          console.log('⚠️ Invalid leadTableFields JSON string:', e.message);
           leadTableFieldsObj = {};
         }
       } else if (typeof leadTableFields === 'object' && leadTableFields !== null) {
@@ -408,7 +338,6 @@ const updatePlan = async (req, res) => {
         try {
           contentUrlsArray = JSON.parse(contentUrls);
         } catch (e) {
-          console.log('⚠️ Invalid contentUrls JSON string:', e.message);
           contentUrlsArray = [];
         }
       } else if (Array.isArray(contentUrls)) {
@@ -429,7 +358,6 @@ const updatePlan = async (req, res) => {
     if (htmlContent !== undefined) {
       sanitizedHtmlContent = htmlContent || null;
       if (htmlContent) {
-        console.log('📝 HTML content updated, length:', htmlContent.length);
       }
     }
 

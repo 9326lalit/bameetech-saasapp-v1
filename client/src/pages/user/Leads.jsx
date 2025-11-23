@@ -65,11 +65,9 @@ const UserLeads = () => {
       const response = await getPlanLeads(planId, tableName);
       const leadsData = response.data;
       
-      console.log('📊 Leads data received:', leadsData);
       
       // Check if plan has multiple lead tables (new approach)
       if (leadsData.leadTables && leadsData.leadTables.length > 0) {
-        console.log('✅ Plan has dynamic lead tables:', leadsData.leadTables);
         setAvailableLeadTables(leadsData.leadTables);
         
         // If no table selected yet, auto-select first table

@@ -8,7 +8,6 @@ const createSampleLeads = async () => {
     // Check if sample leads already exist
     const existingLeads = await Lead.findAll();
     if (existingLeads.length > 0) {
-      // console.log('Sample leads already exist');
       return;
     }
     

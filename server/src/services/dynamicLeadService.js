@@ -154,7 +154,6 @@ const addColumnsToTable = async (tableName, newColumns) => {
         await sequelize.query(alterQuery);
       }
     }
-    console.log(`✅ Added ${newColumns.length} new column(s) to '${tableName}'`);
   } catch (error) {
     console.error(`Error adding columns to '${tableName}':`, error);
     throw error;
@@ -253,7 +252,6 @@ const processWebhookLead = async (webhookData) => {
     
     if (!exists) {
       // Create new table
-      console.log(`📝 Creating new table: ${form_key}`);
       await createLeadTable(form_key, webhookData);
     } else {
       // Check if we need to add new columns
@@ -264,7 +262,6 @@ const processWebhookLead = async (webhookData) => {
         .filter(key => key !== 'form_key' && !existingColumnNames.includes(key));
       
       if (newColumns.length > 0) {
-        console.log(`📝 Adding ${newColumns.length} new column(s) to ${form_key}`);
         await addColumnsToTable(form_key, newColumns);
       }
     }

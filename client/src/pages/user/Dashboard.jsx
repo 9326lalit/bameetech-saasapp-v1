@@ -29,22 +29,6 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
 
-const handleCancel = async (id) => {
-  console.log("🟡 Sending subscription id:", id);
-
-  if (!id) {
-    return toast.error("Subscription ID missing!");
-  }
-
-  try {
-    const res = await cancelSubscription(id);
-    toast.success("Cancelled Successfully");
-  } catch (err) {
-    toast.error("Error cancelling subscription");
-  }
-};
-
-
   // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
@@ -287,9 +271,7 @@ const handleCancel = async (id) => {
                     <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
                       <Link to={`/resources/plan/${plan.id || s.planId}`} className="btn btn-primary flex-1">Access Resources</Link>
                       <Link to="/leads" className="btn btn-ghost">View Leads</Link>
-                      {/* <button onClick={() => handleCancel(s?.id)}>
-  Cancel Plan
-</button> */}
+                      
 
                     </div>
                   </div>

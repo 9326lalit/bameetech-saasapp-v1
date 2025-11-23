@@ -2,22 +2,15 @@ const { sequelize } = require('../config/db.config');
 const { User } = require('../models');
 
 const migrateDatabase = async () => {
-  try {
-    console.log('🔄 Starting database migration...');
-    
+  try {    
     // Force sync to add new columns
     await sequelize.sync({ alter: true, force: false });
-    
-    console.log('✅ Database migration completed successfully');
-    
     // Test the new columns by querying a user
     try {
       const testUser = await User.findOne({ limit: 1 });
       if (testUser) {
-        console.log('✅ New columns are accessible');
       }
     } catch (error) {
-      console.log('⚠️  Testing new columns failed:', error.message);
     }
     
   } catch (error) {

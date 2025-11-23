@@ -119,7 +119,6 @@ const fetchLeadsFromExternalDatabase = async (leadDatabase, limit = null) => {
     
     // Only log if this is not a cached error
     if (error.message !== 'Connection recently failed (cached)') {
-      console.log(`⚠ External database unavailable (${errorType}): ${leadDatabase.name} - Falling back to mock data`);
     }
     
     // Throw a simplified error

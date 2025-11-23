@@ -6,9 +6,7 @@ const resetDatabase = async () => {
     
     // This will drop all tables and recreate them
     await sequelize.sync({ force: true });
-    
-    console.log('✅ Database reset completed successfully');
-    console.log('⚠️  All existing data has been cleared');
+   
     
   } catch (error) {
     console.error('❌ Database reset failed:', error.message);
@@ -22,7 +20,6 @@ module.exports = resetDatabase;
 if (require.main === module) {
   resetDatabase()
     .then(() => {
-      console.log('Reset completed');
       process.exit(0);
     })
     .catch((error) => {

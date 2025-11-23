@@ -116,12 +116,10 @@ const handleWebhook = async (req, res) => {
     return res.status(400).json({ status: 'invalid signature' });
   }
 
-  console.log("✅ Webhook Verified");
 
   try {
     const event = req.body.event;
 
-    console.log("event hit...",event)
     if (event === "payment.captured") {
       const paymentEntity = req.body.payload.payment.entity;
 
@@ -146,7 +144,6 @@ const handleWebhook = async (req, res) => {
       const start = new Date();
 const end = new Date(start.getTime() + plan.duration * 24 * 60 * 60 * 1000);
 
-console.log('start:', start, 'end:', end);
 
 // Optional: format as MySQL DATETIME
 const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
@@ -164,7 +161,6 @@ const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
         });
       }
 
-      console.log("subscription done...");
       // Store Payment
       await Payment.create({
         userId,
@@ -175,7 +171,6 @@ const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
         orderId: order_id,
         status: "success"
       });
-      console.log("✅ Payment & Subscription saved in DB");
     }
 
     res.status(200).json({ status: "ok" });
@@ -317,8 +312,6 @@ const cancelSubscription = async (req, res) => {
     subscription.status = "cancelled";
     subscription.endDate = new Date(); // Access stop now
     await subscription.save();
-
-    console.log("✅ Subscription cancelled:", subscription);
 
     return res.status(200).json({
       success: true,

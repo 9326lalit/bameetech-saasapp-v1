@@ -66,7 +66,6 @@ const generateContentAccessToken = async (req, res) => {
       userAgent: req.get('User-Agent')
     });
 
-    console.log(`🔑 Access token generated for user ${userId} - content ${contentId}`);
 
     // Return proxy URL
     const proxyUrl = `${req.protocol}://${req.get('host')}/api/content/view/${accessToken}`;
@@ -182,7 +181,6 @@ const viewProtectedContent = async (req, res) => {
       const normalizedOriginalIp = normalizeIp(originalIp);
 
       if (normalizedCurrentIp !== normalizedOriginalIp) {
-      console.log(`🚫 IP mismatch detected! Original: ${normalizedOriginalIp}, Current: ${normalizedCurrentIp}`);
       
       return res.status(403).send(`
         <!DOCTYPE html>
@@ -319,7 +317,6 @@ const viewProtectedContent = async (req, res) => {
       accessCount: access.accessCount + 1
     });
 
-    console.log(`📖 Content accessed: ${content.title} by ${access.User.email}`);
 
     // Fetch WordPress content with or without password
     try {

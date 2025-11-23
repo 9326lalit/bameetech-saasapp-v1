@@ -7,7 +7,6 @@ const { QueryTypes } = require('sequelize');
  */
 const addLeadTablesToPlans = async () => {
   try {
-    console.log('🔄 Starting migration: Add leadTables column to Plans...');
     
     // Check if column already exists
     const checkQuery = `
@@ -21,7 +20,6 @@ const addLeadTablesToPlans = async () => {
     const results = await sequelize.query(checkQuery, { type: QueryTypes.SELECT });
     
     if (results.length > 0) {
-      console.log('✅ Column leadTables already exists. Skipping migration.');
       return { success: true, message: 'Column already exists' };
     }
     
@@ -32,9 +30,6 @@ const addLeadTablesToPlans = async () => {
     `;
     
     await sequelize.query(alterQuery);
-    
-    console.log('✅ Migration completed: leadTables column added successfully');
-    console.log('📝 Note: Existing plans will have empty leadTables array by default');
     
     return { success: true, message: 'Column added successfully' };
   } catch (error) {
@@ -47,7 +42,6 @@ const addLeadTablesToPlans = async () => {
 if (require.main === module) {
   addLeadTablesToPlans()
     .then((result) => {
-      console.log('✅ Migration script completed:', result.message);
       process.exit(0);
     })
     .catch((error) => {

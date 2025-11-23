@@ -137,7 +137,6 @@ const sendOTPEmail = async (email, otp, purpose) => {
     };
     
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ OTP email sent to ${email}:`, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error sending OTP email:', error);
@@ -194,7 +193,6 @@ const sendWelcomeEmail = async (email, name) => {
     };
     
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Welcome email sent to ${email}`);
   } catch (error) {
     console.error('❌ Error sending welcome email:', error);
     // Don't throw error for welcome email, it's not critical

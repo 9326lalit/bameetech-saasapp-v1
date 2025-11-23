@@ -22,6 +22,7 @@ app.use(cors({
   origin: [
     "https://dashboard.bameetech.in",
     "http://dashboard.bameetech.in",
+    "http://localhost:5173"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
@@ -46,19 +47,6 @@ app.use('/subscription', require('./routes/subscription.routes'));
 app.use('/subscriber', require('./routes/subscriberResource.routes'));
 app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
 
-
-// Routes
-// app.use('/api/auth', require('./routes/auth.routes'));
-// app.use('/api/plans', require('./routes/plan.routes'));
-// app.use('/api/payment', require('./routes/payment.routes'));
-// app.use('/api/leads', require('./routes/lead.routes')); // old /api → /api/leads
-// app.use('/api/users', require('./routes/user.routes'));
-// app.use('/api/admin/leaddb', require('./routes/leadDatabase.routes'));
-// app.use('/api/admin/subscribers', require('./routes/adminSubscriber.routes'));
-// app.use('/api/subscription', require('./routes/subscription.routes'));
-// app.use('/api/subscriber', require('./routes/subscriberResource.routes'));
-// app.use('/api/razorpay', require('./routes/razorpay.routes.js'));
-
 // Test database connection
 testConnection();
 
@@ -68,25 +56,20 @@ syncDatabase().then(async () => {
     // Force sync specific tables
     const { AdminGrant, Plan, ContentAccess } = require('./models');
     await AdminGrant.sync({ alter: true });
-    console.log('✅ AdminGrant table synced successfully');
     
     // Sync Plan table to add leadTables and contentUrls columns
     await Plan.sync({ alter: true });
-    console.log('✅ Plan table synced (leadTables and contentUrls columns added if needed)');
     
     // Sync ContentAccess table
     await ContentAccess.sync({ alter: true });
-    console.log('✅ ContentAccess table synced successfully');
     
     await createSuperAdmin();
     await createDemoLeadDatabases();
     await createSampleLeads();
 
-    console.log('✅ Database initialization completed successfully.');
 
     // ✅ Start reminder job only after DB is ready
     subscriptionReminderJob();
-    console.log('🕒 Subscription reminder job started...');
   } catch (error) {
     console.error('❌ Error in seeding process:', error.message);
   }

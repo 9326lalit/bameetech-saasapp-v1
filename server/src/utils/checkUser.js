@@ -9,22 +9,11 @@ const checkUser = async () => {
       where: { email: 'mayureshkhot15@gmail.com' }
     });
     
-    if (user) {
-      console.log('User found:', {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt
-      });
-      
+    if (user) {    
       // Test password
       const isPasswordValid = await user.comparePassword('1511@Bameetech');
-      console.log('Password test result:', isPasswordValid);
       
     } else {
-      console.log('User not found');
     }
     
   } catch (error) {

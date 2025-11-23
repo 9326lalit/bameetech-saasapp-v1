@@ -10,7 +10,6 @@ const recreateSuperAdmin = async () => {
       where: { email: 'mayureshkhot15@gmail.com' }
     });
     
-    console.log('Deleted existing user');
     
     // Create new super admin
     const superAdmin = await User.create({
@@ -19,17 +18,10 @@ const recreateSuperAdmin = async () => {
       password: '1511@Bameetech',
       role: 'super_admin'
     });
-    
-    console.log('Created new super admin:', {
-      id: superAdmin.id,
-      name: superAdmin.name,
-      email: superAdmin.email,
-      role: superAdmin.role
-    });
+   
     
     // Test password
     const isPasswordValid = await superAdmin.comparePassword('1511@Bameetech');
-    console.log('Password test result:', isPasswordValid);
     
   } catch (error) {
     console.error('Error:', error);

@@ -48,11 +48,7 @@ router.post('/test-html', verifyToken, isSuperAdmin, async (req, res) => {
 // Debug endpoint to test plan creation data
 router.post('/debug-create', verifyToken, isSuperAdmin, upload.array('documents', 5), async (req, res) => {
   try {
-    console.log('🔍 Debug create plan request');
-    console.log('📋 Headers:', req.headers);
-    console.log('📋 Body:', req.body);
-    console.log('📁 Files:', req.files);
-    
+
     res.json({
       success: true,
       receivedBody: req.body,

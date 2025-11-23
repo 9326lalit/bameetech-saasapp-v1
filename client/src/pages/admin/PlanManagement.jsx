@@ -58,7 +58,6 @@ const PlanManagement = () => {
     setIsSubmitting(true);
     setError(null);
 
-    console.log('📤 handleModalSubmit received formData:', formData);
 
     // Build FormData for file upload / multipart endpoints
     const dataToSend = new FormData();
@@ -77,10 +76,7 @@ const PlanManagement = () => {
     // append files if present
     (files || []).forEach(file => dataToSend.append('documents', file));
 
-    console.log('📤 Sending to API:', {
-      leadTables: formData.leadTables,
-      features: formData.features
-    });
+  
 
     try {
       if (currentPlan) {

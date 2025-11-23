@@ -8,7 +8,6 @@ const grantAccessToExistingUser = async (req, res) => {
     const { userId, planIds, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
 
-    console.log('🔑 Granting access to existing user:', { userId, planIds, planDurations });
 
     // Validate input
     if (!userId || !planIds || !Array.isArray(planIds) || planIds.length === 0) {
@@ -32,7 +31,6 @@ const grantAccessToExistingUser = async (req, res) => {
     
     if (adminGrant) {
       // Update existing grant
-      console.log('📝 Updating existing admin grant');
       
       // Merge plan IDs (avoid duplicates)
       const existingPlanIds = adminGrant.planIds || [];
@@ -44,7 +42,6 @@ const grantAccessToExistingUser = async (req, res) => {
       await adminGrant.save();
     } else {
       // Create new grant
-      console.log('🆕 Creating new admin grant');
       adminGrant = await AdminGrant.create({
         userId,
         planIds,
@@ -153,11 +150,9 @@ const searchExistingUsers = async (req, res) => {
 // Test AdminGrant model
 const testAdminGrant = async (req, res) => {
   try {
-    console.log('🧪 Testing AdminGrant model...');
     
     // Test if AdminGrant table exists and is accessible
     const testGrant = await AdminGrant.findAll({ limit: 1 });
-    console.log('✅ AdminGrant model is working');
     
     res.json({ 
       message: 'AdminGrant model test successful',
@@ -175,28 +170,22 @@ const testAdminGrant = async (req, res) => {
 // Create subscriber with admin-granted access
 const createSubscriber = async (req, res) => {
   try {
-    console.log('📝 Create subscriber request body:', req.body);
-    console.log('👤 Admin ID:', req.user?.id);
     
     const { name, email, password, planIds, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
 
     // Validate input
     if (!name || !email || !password) {
-      console.log('❌ Missing required fields:', { name: !!name, email: !!email, password: !!password });
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
     if (!planIds || !Array.isArray(planIds) || planIds.length === 0) {
-      console.log('❌ Invalid planIds:', planIds);
       return res.status(400).json({ message: 'At least one plan must be selected' });
     }
 
     // Check if user already exists
-    console.log('🔍 Checking if user exists with email:', email);
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      console.log('❌ User already exists');
       return res.status(400).json({ 
         message: 'User with this email already exists',
         existingUser: {
@@ -210,11 +199,8 @@ const createSubscriber = async (req, res) => {
     }
 
     // Verify all plan IDs exist
-    console.log('🔍 Verifying plan IDs:', planIds);
     const plans = await Plan.findAll({ where: { id: planIds } });
-    console.log('📋 Found plans:', plans.length, 'Expected:', planIds.length);
     if (plans.length !== planIds.length) {
-      console.log('❌ Invalid plan IDs - found:', plans.map(p => p.id), 'expected:', planIds);
       return res.status(400).json({ message: 'One or more invalid plan IDs' });
     }
 
@@ -341,14 +327,7 @@ const updateSubscriberAccess = async (req, res) => {
     const { planIds, isActive, planDurations = {} } = req.body; // planDurations: { planId: days }
     const adminId = req.user.id;
 
-    console.log('🔄 Update subscriber access request:', {
-      subscriberId,
-      planIds,
-      isActive,
-      planDurations,
-      planIdsType: typeof planIds,
-      isArray: Array.isArray(planIds)
-    });
+    
 
     // Find admin grant record
     const adminGrant = await AdminGrant.findOne({
@@ -361,16 +340,13 @@ const updateSubscriberAccess = async (req, res) => {
     });
 
     if (!adminGrant) {
-      console.log('❌ Admin grant not found for user:', subscriberId);
       return res.status(404).json({ message: 'Admin-granted subscriber not found' });
     }
 
     const subscriber = adminGrant.User;
-    console.log('✅ Found subscriber:', subscriber.email);
 
     // Update grant status if provided
     if (typeof isActive === 'boolean') {
-      console.log('📝 Updating isActive status to:', isActive);
       adminGrant.isActive = isActive;
       subscriber.isActive = isActive;
     }
@@ -382,24 +358,17 @@ const updateSubscriberAccess = async (req, res) => {
     
     // If current plan IDs were cleaned up, update the grant
     if (currentPlanIds.length !== (adminGrant.planIds || []).length) {
-      console.log('🧹 Cleaning up invalid plan IDs from grant');
       adminGrant.planIds = currentPlanIds;
     }
 
     // Update granted plans if provided
     if (planIds && Array.isArray(planIds)) {
-      console.log('📋 Validating plan IDs:', planIds);
       
       // Verify all plan IDs exist
       const plans = await Plan.findAll({ where: { id: planIds } });
-      console.log('✅ Found plans:', plans.map(p => ({ id: p.id, name: p.name })));
       
       if (plans.length !== planIds.length) {
-        console.log('❌ Plan validation failed:', {
-          requested: planIds,
-          found: plans.map(p => p.id),
-          missing: planIds.filter(id => !plans.find(p => p.id === id))
-        });
+        
         return res.status(400).json({ 
           message: 'One or more invalid plan IDs',
           requested: planIds,
@@ -441,7 +410,6 @@ const updateSubscriberAccess = async (req, res) => {
     await adminGrant.save();
     await subscriber.save();
 
-    console.log('✅ Subscriber access updated successfully');
 
     res.status(200).json({
       message: 'Subscriber access updated successfully',
