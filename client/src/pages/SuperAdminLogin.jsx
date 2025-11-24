@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login as apiLogin } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Building2 } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const SuperAdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -47,18 +48,18 @@ const SuperAdminLogin = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
       <div className="max-w-md w-full mx-4">
         <div className="card">
           <div className="text-center mb-8">
-            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mb-4">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="mx-auto mb-6 flex justify-center">
+              <Logo size="lg" />
             </div>
             <div className="flex items-center justify-center space-x-2 mb-2">
-              <Building2 className="h-6 w-6 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">BameeTech</h1>
+              <Shield className="h-6 w-6 text-orange-600" />
+              <h1 className="text-2xl font-bold text-gray-900">Administrator Portal</h1>
             </div>
-            <p className="text-gray-600">Administrator Access Portal</p>
+            <p className="text-gray-600">Secure access for BameeTech admins</p>
           </div>
           
           {error && (

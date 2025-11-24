@@ -1,8 +1,8 @@
 {
-  "name": "server",
+  "name": "bameetech-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "BameeTech Lead Management Platform - Backend API",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
@@ -12,9 +12,15 @@
     "reset-db": "node src/utils/resetDatabase.js",
     "cleanup-html": "node src/utils/cleanupHtmlContent.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "bameetech",
+    "api",
+    "lead-management",
+    "subscription",
+    "razorpay"
+  ],
+  "author": "BameeTech",
+  "license": "MIT",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",

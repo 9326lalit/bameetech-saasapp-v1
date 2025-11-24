@@ -3,9 +3,9 @@ const { sequelize } = require('../config/db.config');
 
 const LeadDatabase = sequelize.define('LeadDatabase', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   name: {
     type: DataTypes.STRING,

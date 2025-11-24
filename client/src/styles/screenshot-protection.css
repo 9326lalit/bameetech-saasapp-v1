@@ -1,0 +1,177 @@
+/* 🔒 Screenshot Protection Styles */
+
+/* Prevent text selection globally on protected pages */
+.leads-protected-content,
+.leads-protected-content * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -khtml-user-select: none !important;
+}
+
+/* Prevent drag and drop */
+.leads-protected-content img,
+.leads-protected-content table,
+.leads-protected-content td,
+.leads-protected-content th {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: auto !important;
+}
+
+/* Prevent image context menu */
+.leads-protected-content img {
+  pointer-events: none !important;
+}
+
+/* Add subtle overlay to make screenshots less useful */
+.leads-protected-content::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(234, 88, 12, 0.01) 2px,
+    rgba(234, 88, 12, 0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Blur effect when window loses focus */
+.leads-protected-content.blurred {
+  filter: blur(20px) !important;
+  opacity: 0.1 !important;
+  transition: filter 0.1s ease, opacity 0.1s ease;
+}
+
+/* Prevent print */
+@media print {
+  .leads-protected-content {
+    display: none !important;
+  }
+  
+  body::before {
+    content: 'This content cannot be printed for security reasons.';
+    display: block;
+    text-align: center;
+    font-size: 24px;
+    padding: 50px;
+    color: #ea580c;
+  }
+}
+
+/* Hide content during screenshot (experimental) */
+@media screen and (max-resolution: 1dppx) {
+  .leads-protected-content {
+    opacity: 0.95;
+  }
+}
+
+/* Additional protection for table cells */
+.leads-protected-content table td,
+.leads-protected-content table th {
+  position: relative;
+}
+
+/* Prevent highlighting */
+.leads-protected-content::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.leads-protected-content *::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.leads-protected-content::-moz-selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.leads-protected-content *::-moz-selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Watermark styles */
+.security-watermark {
+  position: fixed;
+  pointer-events: none;
+  user-select: none;
+  z-index: 9998;
+  opacity: 0.05;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #ea580c;
+}
+
+/* Prevent iframe embedding */
+.leads-protected-content {
+  position: relative;
+}
+
+/* Additional security indicator */
+.security-badge {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(234, 88, 12, 0.1);
+  border: 2px solid rgba(234, 88, 12, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ea580c;
+  z-index: 10000;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Blur animation for suspicious activity */
+@keyframes security-blur {
+  0% { filter: blur(0px); }
+  100% { filter: blur(20px); }
+}
+
+.security-triggered {
+  animation: security-blur 0.3s ease-out forwards;
+}
+
+/* Prevent copy via CSS */
+.no-copy {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide scrollbar during screenshot attempts (optional) */
+.leads-protected-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leads-protected-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.leads-protected-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.leads-protected-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

@@ -3,12 +3,12 @@ const { sequelize } = require('../config/db.config');
 
 const AdminGrant = sequelize.define('AdminGrant', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   userId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'Users',
@@ -21,7 +21,7 @@ const AdminGrant = sequelize.define('AdminGrant', {
     allowNull: false,
   },
   grantedBy: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'Users',

@@ -3,16 +3,16 @@ const { sequelize } = require('../config/db.config');
 
 const Payment = sequelize.define('Payment', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   userId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
   },
   subscriptionId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
   },
   amount: {
@@ -26,7 +26,7 @@ const Payment = sequelize.define('Payment', {
     type: DataTypes.STRING,
   },
   status: {
-    type: DataTypes.STRING(50), // ✅ ENUM काढून टाकलं, आता Razorpay चे सर्व values save होतील
+    type: DataTypes.STRING(50),
     defaultValue: 'pending',
   },
   paymentDate: {

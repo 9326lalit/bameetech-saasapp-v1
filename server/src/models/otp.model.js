@@ -3,9 +3,9 @@ const { sequelize } = require('../config/db.config');
 
 const OTP = sequelize.define('OTP', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   email: {
     type: DataTypes.STRING,
