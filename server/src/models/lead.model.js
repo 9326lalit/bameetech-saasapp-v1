@@ -3,12 +3,10 @@ const { sequelize } = require('../config/db.config');
 
 const Lead = sequelize.define('Lead', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
-  //table name
-  //leaddatabase id
   name: {
     type: DataTypes.STRING,
   },
@@ -32,7 +30,5 @@ const Lead = sequelize.define('Lead', {
     type: DataTypes.TEXT,
   },
 });
-
-//connectivity
 
 module.exports = Lead;

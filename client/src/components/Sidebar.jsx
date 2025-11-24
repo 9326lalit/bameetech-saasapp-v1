@@ -9,12 +9,12 @@ import {
   Database,
   Lock,
   LogOut,
-  Building2,
   Settings,
   BarChart3,
 } from "lucide-react";
 import LogoutModal from "./LogoutModal";
 import { useState } from "react";
+import Logo from "./Logo";
 
 
 const Sidebar = () => {
@@ -64,9 +64,8 @@ const Sidebar = () => {
   return (
     <aside className="bg-gray-900 text-gray-100 w-64 min-h-screen flex flex-col border-r border-gray-700 shadow-lg">
       {/* Brand */}
-      <div className="p-6 flex items-center space-x-2 border-b border-gray-700">
-        <Building2 className="h-8 w-8 text-blue-400" />
-        <span className="text-2xl font-bold tracking-wide">BameeTech</span>
+      <div className="p-4 flex items-center justify-center border-b border-gray-700 bg-black">
+        <Logo size="md" />
       </div>
 
       {/* Navigation */}
@@ -80,9 +79,9 @@ const Sidebar = () => {
                 <Link
                   to={link.to}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200
-                    ${isActive ? "bg-gray-800 text-white font-medium" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+                    ${isActive ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white font-medium shadow-lg" : "text-gray-300 hover:bg-gray-800 hover:text-orange-400"}`}
                 >
-                  {IconComponent && <IconComponent className="h-5 w-5 mr-3 text-gray-400" />}
+                  {IconComponent && <IconComponent className={`h-5 w-5 mr-3 ${isActive ? "text-white" : "text-gray-400"}`} />}
                   {link.label}
                 </Link>
               </li>
@@ -100,8 +99,8 @@ const Sidebar = () => {
           <span
             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 ${
               userRole === "super_admin"
-                ? "bg-purple-100 text-purple-800"
-                : "bg-green-100 text-green-800"
+                ? "bg-orange-100 text-orange-800"
+                : "bg-yellow-100 text-yellow-800"
             }`}
           >
             {userRole === "super_admin" ? "BameeTech Admin" : "Subscriber"}
@@ -110,7 +109,7 @@ const Sidebar = () => {
 
          <button
         onClick={() => setIsLogoutOpen(true)}
-        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+        className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-700 hover:to-orange-600 transition shadow-md"
       >
         Logout
       </button>

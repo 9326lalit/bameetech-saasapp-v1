@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { register as apiRegister } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import Logo from '../components/Logo';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -154,14 +155,12 @@ const Register = () => {
   } : handleSendOTP;
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
       <div className="max-w-md w-full mx-4">
-        <div className="card">
+        <div className="bg-white shadow-2xl rounded-2xl p-8 border-t-4 border-orange-500">
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
+            <div className="mx-auto mb-6 flex justify-center">
+              <Logo size="lg" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
             <p className="text-gray-600 mt-2">Join BameeTech and start managing your leads</p>
@@ -244,7 +243,7 @@ const Register = () => {
                 
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-3 text-base"
+                  className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? (
@@ -296,7 +295,7 @@ const Register = () => {
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-3 text-base"
+                  className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
                   disabled={otpLoading || otp.some(digit => !digit)}
                 >
                   {otpLoading ? (

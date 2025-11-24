@@ -5,6 +5,7 @@ import { login as apiLogin } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import axios from "axios";
+import Logo from "../components/Logo";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -157,14 +158,14 @@ const Login = () => {
   } : handleSendOTP;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white shadow-xl rounded-2xl p-8">
+        <div className="bg-white shadow-2xl rounded-2xl p-8 border-t-4 border-orange-500">
           
-          {/* Header */}
+          {/* Header with Logo */}
           <div className="text-center mb-8">
-            <div className="mx-auto h-14 w-14 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-              <Lock className="h-7 w-7 text-white" />
+            <div className="mx-auto mb-6 flex justify-center">
+              <Logo size="lg" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
             <p className="text-gray-600 mt-1">Sign in to your BameeTech account</p>
@@ -222,7 +223,7 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-3 text-base"
+                  className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? (
@@ -274,7 +275,7 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-3 text-base"
+                  className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
                   disabled={otpLoading || otp.some(digit => !digit)}
                 >
                   {otpLoading ? (

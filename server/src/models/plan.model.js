@@ -3,9 +3,9 @@ const { sequelize } = require('../config/db.config');
 
 const Plan = sequelize.define('Plan', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   name: {
     type: DataTypes.STRING,
@@ -27,7 +27,7 @@ const Plan = sequelize.define('Plan', {
   },
   // Lead database association (legacy)
   leadDatabaseId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     references: {
       model: 'lead_databases',
       key: 'id'

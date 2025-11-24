@@ -1,6 +1,14 @@
-# BameeTech Lead Management System
+# 🚀 BameeTech Lead Management Platform
 
-A complete subscription-based lead management system for BameeTech, including Admin and User panels, Razorpay integration, and secure database connectivity.
+<div align="center">
+  <img src="client/src/assets/Bamee-Tech-Logo-Menu.png" alt="BameeTech Logo" width="200"/>
+  
+  ### Professional Lead Management & Subscription Platform
+  
+  A complete subscription-based lead management system with Admin and User panels, Razorpay payment integration, and secure database connectivity.
+</div>
+
+---
 
 ## Features
 
@@ -108,6 +116,34 @@ npm run build
 2. Set up environment variables on your hosting provider
 3. Deploy the server and client to Hostinger
 
+## Branding
+
+### Logo & Assets
+- Logo: `client/src/assets/Bamee-Tech-Logo-Menu.png`
+- Favicon: `client/public/Bamee-Tech-Logo-Menu.png`
+- Reusable Logo Component: `client/src/components/Logo.jsx`
+
+### Brand Colors
+- Primary Orange: `#ea580c` (orange-600)
+- Secondary Orange: `#f97316` (orange-500)
+- Accent Yellow: `#fbbf24` (yellow-400)
+- Background: Gradient from orange-50 via yellow-50 to orange-100
+
+### Usage
+```jsx
+import Logo from '../components/Logo';
+
+// Available sizes: sm, md, lg, xl
+<Logo size="md" className="custom-class" />
+```
+
 ## License
 
 This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by BameeTech</p>
+  <p>© 2024 BameeTech. All rights reserved.</p>
+</div>

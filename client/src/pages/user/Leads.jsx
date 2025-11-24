@@ -4,15 +4,18 @@ import {
   Users, Search, Filter, Database, Globe, Mail, Phone, Building,
   CheckCircle, XCircle, AlertCircle, Loader, Package, TrendingUp,
   ArrowUpDown, ChevronLeft, ChevronRight, ExternalLink, Calendar,
-  Activity, Target, Clock, BarChart3, ArrowLeft
+  Activity, Target, Clock, BarChart3, ArrowLeft, Shield
 } from 'lucide-react';
 import Layout from '../../components/Layout';
 import { getUserLeadsOverview, getPlanLeads } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import '../../styles/screenshot-protection.css';
 
 const UserLeads = () => {
   const { planId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [allLeadsOverview, setAllLeadsOverview] = useState([]);
   const [selectedPlanData, setSelectedPlanData] = useState(null);
@@ -138,6 +141,161 @@ const UserLeads = () => {
   };
 
   useEffect(() => setCurrentPage(1), [searchTerm, filterStatus]);
+
+  // 🔒 ENHANCED Security Protection: Prevent screenshots, copy-paste, and screen capture
+  useEffect(() => {
+    // Disable right-click
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      toast.error('⚠️ Right-click is disabled for security', {
+        duration: 2000,
+        icon: '🔒'
+      });
+      return false;
+    };
+
+    // Disable keyboard shortcuts (including Windows Snipping Tool shortcuts)
+    const handleKeyDown = (e) => {
+      // Block Ctrl+C, Ctrl+A, Ctrl+P, Ctrl+S, Ctrl+U, PrintScreen, Win+Shift+S (Snipping Tool)
+      if (
+        (e.ctrlKey && ['c', 'a', 'p', 's', 'u', 'x'].includes(e.key.toLowerCase())) ||
+        e.key === 'PrintScreen' ||
+        (e.metaKey && ['c', 'a', 'p', 's', 'x'].includes(e.key.toLowerCase())) || // Mac Command key
+        (e.shiftKey && e.key === 'PrintScreen') || // Shift+PrintScreen
+        (e.metaKey && e.shiftKey && e.key.toLowerCase() === 's') || // Mac screenshot
+        (e.key === 'Meta' && e.shiftKey) // Windows key combinations
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error('⚠️ Screenshot and copy actions are disabled for security', {
+          duration: 3000,
+          icon: '🔒'
+        });
+        return false;
+      }
+    };
+
+    // Detect and prevent PrintScreen key
+    const handleKeyUp = (e) => {
+      if (e.key === 'PrintScreen') {
+        navigator.clipboard.writeText('');
+        toast.error('⚠️ Screenshots are not allowed on this page', {
+          duration: 3000,
+          icon: '🔒'
+        });
+      }
+    };
+
+    // Blur content when tab is hidden (prevents screenshots while switching tabs)
+    const handleVisibilityChange = () => {
+      const leadsContent = document.querySelector('.leads-protected-content');
+      if (leadsContent) {
+        if (document.hidden) {
+          leadsContent.style.filter = 'blur(20px)';
+          leadsContent.style.opacity = '0.1';
+          leadsContent.style.pointerEvents = 'none';
+        } else {
+          leadsContent.style.filter = 'none';
+          leadsContent.style.opacity = '1';
+          leadsContent.style.pointerEvents = 'auto';
+        }
+      }
+    };
+
+    // Detect window blur (user switching to Snipping Tool)
+    const handleWindowBlur = () => {
+      const leadsContent = document.querySelector('.leads-protected-content');
+      if (leadsContent) {
+        leadsContent.style.filter = 'blur(20px)';
+        leadsContent.style.opacity = '0.1';
+      }
+    };
+
+    const handleWindowFocus = () => {
+      const leadsContent = document.querySelector('.leads-protected-content');
+      if (leadsContent) {
+        leadsContent.style.filter = 'none';
+        leadsContent.style.opacity = '1';
+      }
+    };
+
+    // Prevent drag and drop
+    const handleDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Prevent text selection on double-click
+    const handleSelectStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Detect DevTools opening (advanced users might try to bypass)
+    const detectDevTools = () => {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      
+      if (widthThreshold || heightThreshold) {
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;"><div style="text-align:center;"><h1>⚠️ Access Restricted</h1><p>Developer tools are not allowed on this page for security reasons.</p></div></div>';
+      }
+    };
+
+    // Monitor for screen recording software
+    let lastTime = performance.now();
+    const detectScreenRecording = () => {
+      const currentTime = performance.now();
+      const delta = currentTime - lastTime;
+      
+      // If frame rate drops significantly, might indicate screen recording
+      if (delta > 100) {
+        console.warn('⚠️ Potential screen recording detected');
+      }
+      lastTime = currentTime;
+      requestAnimationFrame(detectScreenRecording);
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('selectstart', handleSelectStart);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+
+    // Start monitoring
+    const devToolsInterval = setInterval(detectDevTools, 1000);
+    const recordingFrame = requestAnimationFrame(detectScreenRecording);
+
+    // Disable text selection via CSS
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.mozUserSelect = 'none';
+    document.body.style.msUserSelect = 'none';
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('selectstart', handleSelectStart);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+      clearInterval(devToolsInterval);
+      cancelAnimationFrame(recordingFrame);
+      
+      // Restore text selection
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+      document.body.style.mozUserSelect = '';
+      document.body.style.msUserSelect = '';
+    };
+  }, []);
 
   const handleTableChange = (tableName) => {
     setSelectedTable(tableName);
@@ -302,7 +460,113 @@ const UserLeads = () => {
 
     return (
       <Layout title={`${leadStats.planName} - Leads`}>
-        <div className="max-w-[1600px] mx-auto px-6 py-6">
+        <div className="max-w-[1600px] mx-auto px-6 py-6 leads-protected-content" style={{ 
+          userSelect: 'none', 
+          WebkitUserSelect: 'none', 
+          MozUserSelect: 'none', 
+          msUserSelect: 'none', 
+          position: 'relative',
+          WebkitTouchCallout: 'none',
+          KhtmlUserSelect: 'none'
+        }}>
+        
+        {/* 🔒 Multiple Security Watermarks */}
+        {/* Main diagonal watermark */}
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%) rotate(-45deg)',
+          fontSize: '64px',
+          fontWeight: 'bold',
+          color: 'rgba(234, 88, 12, 0.08)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 999,
+          whiteSpace: 'nowrap',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase'
+        }}>
+          {user?.email || 'Protected Content'} • BameeTech
+        </div>
+
+        {/* Top watermark */}
+        <div style={{
+          position: 'fixed',
+          top: '20%',
+          left: '50%',
+          transform: 'translate(-50%, 0) rotate(-30deg)',
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: 'rgba(234, 88, 12, 0.05)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 999,
+          whiteSpace: 'nowrap'
+        }}>
+          CONFIDENTIAL • {user?.name || 'User'}
+        </div>
+
+        {/* Bottom watermark */}
+        <div style={{
+          position: 'fixed',
+          bottom: '20%',
+          left: '50%',
+          transform: 'translate(-50%, 0) rotate(-30deg)',
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: 'rgba(234, 88, 12, 0.05)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 999,
+          whiteSpace: 'nowrap'
+        }}>
+          DO NOT SHARE • {new Date().toLocaleDateString()}
+        </div>
+
+        {/* Repeating pattern watermark */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 200px,
+            rgba(234, 88, 12, 0.02) 200px,
+            rgba(234, 88, 12, 0.02) 400px
+          )`,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 998
+        }} />
+
+        {/* 🔒 Security Badge */}
+        <div className="security-badge" style={{
+          position: 'fixed',
+          top: '80px',
+          right: '20px',
+          background: 'rgba(234, 88, 12, 0.1)',
+          border: '2px solid rgba(234, 88, 12, 0.3)',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          fontSize: '11px',
+          fontWeight: '600',
+          color: '#ea580c',
+          zIndex: 10000,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          boxShadow: '0 2px 8px rgba(234, 88, 12, 0.2)'
+        }}>
+          <Shield className="h-3 w-3" />
+          PROTECTED CONTENT
+        </div>
+
         {/* Header */}
         <div className="mb-6">
           <button
