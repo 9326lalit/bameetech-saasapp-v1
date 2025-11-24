@@ -337,110 +337,192 @@ const Users = () => {
                     )}
                 </div>
                 
-                {/* Filters and Search - Disabled only if no data is present */}
-                <div className="bg-white shadow-lg rounded-xl p-4 mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters & Search</h3>
-                    
-                    {/* Row 1: Search and Status Filter */}
-                    <div className="flex flex-wrap gap-4 mb-4">
-                        <input
-                            type="text"
-                            placeholder="Search by name or email"
-                            className="p-3 border border-gray-300 rounded-lg flex-1 min-w-[200px] focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            disabled={isFetching && users.length === 0}
-                        />
-                        <select
-                            className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                            value={filter}
-                            onChange={e => setFilter(e.target.value)}
-                            disabled={isFetching && users.length === 0}
-                        >
-                            <option value="all">All Users</option>
-                            <option value="active">Active Subscriptions</option>
-                            <option value="inactive">No Active Subscription</option>
-                            <option value="expired">Expired Subscriptions</option>
-                        </select>
+                {/* Enhanced Filters and Search Section */}
+                <div className="bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden mb-6">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                            <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Filters & Search
+                        </h3>
                     </div>
 
-                    {/* Row 2: Date Filter */}
-                    <div className="flex flex-wrap gap-4 mb-4">
-                        <select
-                            className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                            value={dateFilter}
-                            onChange={e => setDateFilter(e.target.value)}
-                            disabled={isFetching && users.length === 0}
-                        >
-                            <option value="all">All Time</option>
-                            <option value="thisMonth">This Month</option>
-                            <option value="lastMonth">Last Month</option>
-                            <option value="custom">Custom Date Range</option>
-                        </select>
+                    <div className="p-6">
+                        {/* Row 1: Search and Status Filter */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+                            {/* Search Input */}
+                            <div className="lg:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Search Users
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name or email..."
+                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm"
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                        disabled={isFetching && users.length === 0}
+                                    />
+                                </div>
+                            </div>
 
-                        {dateFilter === 'custom' && (
-                            <>
-                                <input
-                                    type="date"
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                                    value={customDateRange.start}
-                                    onChange={e => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            {/* Status Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Subscription Status
+                                </label>
+                                <select
+                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm bg-white"
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value)}
                                     disabled={isFetching && users.length === 0}
-                                    placeholder="Start Date"
-                                />
-                                <input
-                                    type="date"
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                                    value={customDateRange.end}
-                                    onChange={e => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                >
+                                    <option value="all">All Users</option>
+                                    <option value="active">Active Subscriptions</option>
+                                    <option value="inactive">No Active Subscription</option>
+                                    <option value="expired">Expired Subscriptions</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Date Filter */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+                            {/* Date Range Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Date Range
+                                </label>
+                                <select
+                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm bg-white"
+                                    value={dateFilter}
+                                    onChange={e => setDateFilter(e.target.value)}
                                     disabled={isFetching && users.length === 0}
-                                    placeholder="End Date"
-                                />
-                            </>
-                        )}
-                    </div>
+                                >
+                                    <option value="all">All Time</option>
+                                    <option value="thisMonth">This Month</option>
+                                    <option value="lastMonth">Last Month</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
 
-                    {/* Row 3: Sorting Options */}
-                    <div className="flex flex-wrap gap-4">
-                        <select
-                            className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                            value={sortBy}
-                            onChange={e => setSortBy(e.target.value)}
-                            disabled={isFetching && users.length === 0}
-                        >
-                            <option value="endDate">Sort by End Date</option>
-                            <option value="startDate">Sort by Start Date</option>
-                            <option value="amount">Sort by Amount</option>
-                            <option value="planName">Sort by Plan Name</option>
-                        </select>
-                        <select
-                            className="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                            value={sortOrder}
-                            onChange={e => setSortOrder(e.target.value)}
-                            disabled={isFetching && users.length === 0}
-                        >
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
-                        </select>
-                        <button
-                            onClick={() => {
-                                setSearch('');
-                                setFilter('all');
-                                setDateFilter('all');
-                                setSortBy('endDate');
-                                setSortOrder('desc');
-                                setCustomDateRange({ start: '', end: '' });
-                            }}
-                            className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 font-medium"
-                            disabled={isFetching && users.length === 0}
-                        >
-                            Reset Filters
-                        </button>
-                    </div>
+                            {/* Custom Date Range Inputs */}
+                            {dateFilter === 'custom' ? (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm"
+                                            value={customDateRange.start}
+                                            onChange={e => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                            disabled={isFetching && users.length === 0}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            End Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm"
+                                            value={customDateRange.end}
+                                            onChange={e => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                            disabled={isFetching && users.length === 0}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="lg:col-span-2"></div>
+                            )}
+                        </div>
 
-                    {/* Results Count */}
-                    <div className="mt-4 text-sm text-gray-600">
-                        Showing <span className="font-semibold">{filteredUsers.length}</span> of <span className="font-semibold">{users.length}</span> users
+                        {/* Row 3: Sorting Options */}
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                            {/* Sort By */}
+                            <div className="lg:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Sort By
+                                </label>
+                                <select
+                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm bg-white"
+                                    value={sortBy}
+                                    onChange={e => setSortBy(e.target.value)}
+                                    disabled={isFetching && users.length === 0}
+                                >
+                                    <option value="endDate">Sort by End Date</option>
+                                    <option value="startDate">Sort by Start Date</option>
+                                    <option value="amount">Sort by Amount</option>
+                                    <option value="planName">Sort by Plan Name</option>
+                                </select>
+                            </div>
+
+                            {/* Sort Order */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Order
+                                </label>
+                                <select
+                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm bg-white"
+                                    value={sortOrder}
+                                    onChange={e => setSortOrder(e.target.value)}
+                                    disabled={isFetching && users.length === 0}
+                                >
+                                    <option value="desc">Descending</option>
+                                    <option value="asc">Ascending</option>
+                                </select>
+                            </div>
+
+                            {/* Reset Button */}
+                            <div className="flex items-end">
+                                <button
+                                    onClick={() => {
+                                        setSearch('');
+                                        setFilter('all');
+                                        setDateFilter('all');
+                                        setSortBy('endDate');
+                                        setSortOrder('desc');
+                                        setCustomDateRange({ start: '', end: '' });
+                                    }}
+                                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition duration-150 font-medium shadow-sm flex items-center justify-center"
+                                    disabled={isFetching && users.length === 0}
+                                >
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Reset Filters
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Results Count with Enhanced Styling */}
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center text-sm text-gray-600">
+                                    <svg className="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                    </svg>
+                                    Showing <span className="font-semibold text-indigo-600 mx-1">{filteredUsers.length}</span> of <span className="font-semibold text-gray-900 mx-1">{users.length}</span> users
+                                </div>
+                                {(search || filter !== 'all' || dateFilter !== 'all') && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                                        </svg>
+                                        Filters Active
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
