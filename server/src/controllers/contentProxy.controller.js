@@ -68,7 +68,7 @@ const generateContentAccessToken = async (req, res) => {
 
 
     // Return proxy URL
-    const proxyUrl = `${req.protocol}://${req.get('host')}/api/content/view/${accessToken}`;
+    const proxyUrl = `${req.protocol}://${req.get('host')}/content/view/${accessToken}`;
 
     res.status(200).json({
       success: true,
