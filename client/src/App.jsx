@@ -19,6 +19,7 @@ import Users from "./pages/admin/Users";
 import ProtectedRoute from "./routes/protectedRoutes";
 import PlanManagement from "./pages/admin/PlanManagement";
 import SubscriberManagement from "./pages/admin/SubscriberManagement";
+import Contact from "./pages/user/Contact";
 
 function App() {
   return (
@@ -93,6 +94,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="user">
                 <ProtectedContent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contact"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <Contact />
               </ProtectedRoute>
             }
           />

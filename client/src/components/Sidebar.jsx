@@ -11,6 +11,7 @@ import {
   LogOut,
   Settings,
   BarChart3,
+  Contact,
 } from "lucide-react";
 import LogoutModal from "./LogoutModal";
 import { useState } from "react";
@@ -37,6 +38,7 @@ const Sidebar = () => {
     tag: Tag,
     database: Database,
     lock: Lock,
+    contact : Contact ,
     // settings: Settings,
     // analytics: BarChart3,
   };
@@ -47,7 +49,9 @@ const Sidebar = () => {
     { to: "/resources", label: "My Resources", icon: "database" },
     { to: "/protected-content", label: "Protected Content", icon: "lock" },
     { to: "/subscription-plans", label: "Subscription", icon: "credit-card" },
+    { to: "/contact", label: "Contact", icon: "contact" },  
     { to: "/profile", label: "Profile", icon: "user" },
+
   ];
 
   const superAdminLinks = [
