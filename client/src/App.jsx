@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin-login" element={<SuperAdminLogin />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* User Routes */}
           <Route
