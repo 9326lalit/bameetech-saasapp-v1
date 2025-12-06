@@ -639,11 +639,16 @@ const Login = () => {
           </form>
 
           {/* FOOTER */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-6 space-y-3">
             <p className="text-gray-600">
               Don't have an account?{" "}
-              <Link to="/register" className="text-blue-600">
+              <Link to="/register" className="text-blue-600 font-medium hover:underline">
                 Create account
+              </Link>
+            </p>
+            <p className="text-gray-600">
+              <Link to="/forgot-password" className="text-orange-600 font-medium hover:underline">
+                Forgot your password?
               </Link>
             </p>
           </div>
