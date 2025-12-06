@@ -326,13 +326,13 @@ const Users = () => {
                                 color="purple"
                                 subtitle="All payments"
                             /> */}
-                            <StatCard 
+                            {/* <StatCard 
                                 title="MRR" 
                                 value={formatCurrency(stats.monthlyRecurringRevenue)} 
                                 icon={TrendingUp} 
                                 color="blue"
                                 subtitle="Monthly recurring"
-                            />
+                            /> */}
                         </>
                     )}
                 </div>

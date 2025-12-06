@@ -18,7 +18,7 @@ const ProtectedContent = () => {
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
       
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await axios.get(`${API_URL}/subscription/my-subscriptions`, {
@@ -44,7 +44,7 @@ const ProtectedContent = () => {
   const handleAccessContent = async (planId, contentId, contentTitle) => {
     try {
       setAccessingContent(contentId);
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
 
       // Generate access token
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
