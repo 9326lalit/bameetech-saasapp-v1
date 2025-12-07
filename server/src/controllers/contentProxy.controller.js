@@ -1,6 +1,7 @@
 const { Plan, Subscription, ContentAccess, User } = require('../models');
 const axios = require('axios');
 const crypto = require('crypto');
+const { decode } = require('jsonwebtoken');
 const { Op } = require('sequelize');
 
 // Generate secure access token
@@ -112,6 +113,20 @@ const viewProtectedContent = async (req, res) => {
         }
       ]
     });
+// Validate userId (prevent link sharing)
+const urlUid = req.query.uid;
+if (!urlUid || access.userId.toString() !== urlUid.toString()) {
+  return res.status(403).send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>Unauthorized</title></head>
+    <body>
+      <h1>🚫 Unauthorized Access</h1>
+      <p>This link is not for your account.</p>
+    </body>
+    </html>
+  `);
+}
 
     if (!access) {
       return res.status(403).send(`

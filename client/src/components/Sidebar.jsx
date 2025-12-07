@@ -27,6 +27,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     logout();
+       localStorage.clear();   // removes ALL keys
     setIsLogoutOpen(false);
   };
 

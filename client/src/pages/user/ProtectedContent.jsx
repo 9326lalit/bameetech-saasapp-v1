@@ -56,7 +56,8 @@ const ProtectedContent = () => {
 
       if (response.data.success) {
         // Open content in new tab
-        window.open(response.data.proxyUrl, '_blank');
+        // window.open(response.data.proxyUrl, '_blank');
+        window.open(`${response.data.proxyUrl}?uid=${user.id}`, '_blank');
       }
     } catch (err) {
       console.error('Error accessing content:', err);
