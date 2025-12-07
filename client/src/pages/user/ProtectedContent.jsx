@@ -47,7 +47,7 @@ const ProtectedContent = () => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.post(
-        `${API_URL}/api/api/content/generate-token`,
+        `${API_URL}/api/content/generate-token`,
         { planId, contentId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
