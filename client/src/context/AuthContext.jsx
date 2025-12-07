@@ -9,15 +9,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem("token"); // or sessionStorage if needed
+      const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await getProfile(); // Fetch user profile using token
+          const response = await getProfile();
           setUser(response.data);
         } catch (error) {
           console.error("Error loading user:", error);
-          localStorage.removeItem("token"); // Remove invalid token
-          setUser(null);
+          // Only remove token if it's actually invalid (401/403)
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            localStorage.removeItem("token");
+            setUser(null);
+          }
         }
       }
       setLoading(false);
@@ -27,13 +30,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, token) => {
-    localStorage.setItem("token", token); // Save token
-    setUser(userData); // Set user data after login
+    localStorage.setItem("token", token);
+    setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();
     setUser(null);
+  };
+  const updateUser = (userData) => {
+    setUser(userData);
   };
 
   return (
@@ -43,6 +49,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user,
       }}
     >
@@ -51,4 +58,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

@@ -134,7 +134,8 @@ const UserDashboard = () => {
 
   const handleRetry = () => fetchUserData();
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
+    // localStorage.removeItem('token');
     toast.success('Logged out');
     navigate('/login');
   };
