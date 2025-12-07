@@ -37,7 +37,7 @@ export const generateContentAccessToken = async (req, res) => {
       userAgent: req.get('User-Agent')
     });
 
-    const proxyUrl = `${req.protocol}://${req.get('host')}/api/content/view/${accessToken}?uid=${userId}`;
+    const proxyUrl = `${req.protocol}://${req.get('host')}/api/api/content/view/${accessToken}?uid=${userId}`;
 
     // res.status(200).json({
     //   success: true, proxyUrl, expiresAt,
