@@ -12,13 +12,14 @@ import {
   Settings,
   BarChart3,
   Contact,
+  X,
 } from "lucide-react";
 import LogoutModal from "./LogoutModal";
 import { useState } from "react";
 import Logo from "./Logo";
 
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const userRole = user?.role;
@@ -69,8 +70,17 @@ const Sidebar = () => {
   return (
     <aside className="bg-gray-900 text-gray-100 w-64 min-h-screen flex flex-col border-r border-gray-700 shadow-lg">
       {/* Brand */}
-      <div className="p-4 flex items-center justify-center border-b border-gray-700 bg-black">
+      <div className="p-4 flex items-center justify-between border-b border-gray-700 bg-black">
         <Logo size="md" />
+        {/* Close button for mobile */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -83,11 +93,12 @@ const Sidebar = () => {
               <li key={link.to}>
                 <Link
                   to={link.to}
+                  onClick={onClose} // Close mobile menu when link is clicked
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200
                     ${isActive ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white font-medium shadow-lg" : "text-gray-300 hover:bg-gray-800 hover:text-orange-400"}`}
                 >
                   {IconComponent && <IconComponent className={`h-5 w-5 mr-3 ${isActive ? "text-white" : "text-gray-400"}`} />}
-                  {link.label}
+                  <span className="truncate">{link.label}</span>
                 </Link>
               </li>
             );

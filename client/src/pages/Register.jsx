@@ -155,24 +155,24 @@ const Register = () => {
   } : handleSendOTP;
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white shadow-2xl rounded-2xl p-8 border-t-4 border-orange-500">
-          <div className="text-center mb-8">
-            <div className="mx-auto mb-6 flex justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border-t-4 border-orange-500">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="mx-auto mb-4 sm:mb-6 flex justify-center">
               <Logo size="lg" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-            <p className="text-gray-600 mt-2">Join BameeTech and start managing your leads</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create account</h1>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">Join BameeTech and start managing your leads</p>
           </div>
           
           {error && (
-            <div className="alert alert-error mb-6">
+            <div className="alert alert-error mb-4 sm:mb-6 text-sm sm:text-base">
               {error}
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {!showOTP ? (
               <>
                 <div>

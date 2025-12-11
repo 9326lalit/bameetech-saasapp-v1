@@ -104,15 +104,15 @@ const PlanManagement = () => {
         .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300; }
       `}</style>
 
-      <div className="space-y-8 p-6 bg-gray-50 min-h-full">
+      <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 bg-gray-50 min-h-full">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Subscription Plans 💎</h1>
-            <p className="text-gray-600 mt-1">Create, configure, and manage subscription tiers for your service.</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Subscription Plans 💎</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Create, configure, and manage subscription tiers for your service.</p>
           </div>
           <button
             onClick={() => { setCurrentPlan(null); setShowModal(true); }}
-            className="btn btn-primary flex items-center min-w-[180px] justify-center"
+            className="mobile-button btn-primary flex items-center justify-center"
             disabled={loading}
           >
             <Plus className="h-4 w-4 mr-2" /> Add New Plan

@@ -140,3 +140,77 @@ body {
 .alert-info {
   @apply bg-blue-50 border-blue-200 text-blue-800;
 }
+
+/* Mobile Responsive Utilities */
+.mobile-scroll {
+  @apply overflow-x-auto;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.mobile-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.mobile-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.mobile-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.mobile-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.mobile-table {
+  @apply min-w-full divide-y divide-gray-200;
+  min-width: 600px; /* Ensure table doesn't get too cramped */
+}
+
+.mobile-card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow duration-200;
+}
+
+.mobile-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+}
+
+.mobile-flex {
+  @apply flex flex-col sm:flex-row gap-3 sm:gap-4;
+}
+
+.mobile-text {
+  @apply text-sm sm:text-base;
+}
+
+.mobile-heading {
+  @apply text-lg sm:text-xl lg:text-2xl font-semibold;
+}
+
+.mobile-button {
+  @apply w-full sm:w-auto px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Responsive Text Truncation */
+.truncate-mobile {
+  @apply truncate sm:whitespace-normal;
+}
+
+/* Mobile-friendly spacing */
+.mobile-spacing {
+  @apply space-y-4 sm:space-y-6;
+}
+
+.mobile-padding {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+.mobile-margin {
+  @apply m-4 sm:m-6 lg:m-8;
+}
