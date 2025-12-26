@@ -501,32 +501,32 @@ const Login = () => {
     : handleSendOTP;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white shadow-2xl rounded-2xl p-8 border-t-4 border-orange-500">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border-t-4 border-orange-500">
 
           {/* HEADER */}
-          <div className="text-center mb-8">
-            <div className="mx-auto mb-6 flex justify-center">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="mx-auto mb-4 sm:mb-6 flex justify-center">
               <Logo size="lg" />
             </div>
-            <h1 className="text-2xl font-bold">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your BameeTech account</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Welcome Back</h1>
+            <p className="text-gray-600 text-sm sm:text-base">Sign in to your BameeTech account</p>
           </div>
 
-          {error && <div className="alert alert-error mb-6">{error}</div>}
+          {error && <div className="alert alert-error mb-4 sm:mb-6 text-sm sm:text-base">{error}</div>}
 
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {!showOTP ? (
               <>
                 {/* Email */}
                 <div>
-                  <label className="block text-sm mb-2">Email Address</label>
+                  <label className="block text-sm mb-2 font-medium text-gray-700">Email Address</label>
                   <input
                     type="email"
                     name="email"
-                    className="input"
+                    className="input text-base"
                     placeholder="Enter email"
                     value={formData.email}
                     onChange={handleChange}
@@ -536,12 +536,12 @@ const Login = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm mb-1">Password</label>
+                  <label className="block text-sm mb-2 font-medium text-gray-700">Password</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className="input pr-12"
+                      className="input pr-12 text-base"
                       placeholder="Enter password"
                       value={formData.password}
                       onChange={handleChange}
@@ -550,9 +550,9 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-3 top-2.5 text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 p-1"
                     >
-                      {showPassword ? <EyeOff /> : <Eye />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
@@ -576,17 +576,17 @@ const Login = () => {
               <>
                 {/* OTP UI */}
                 <div className="text-center mb-6">
-                  <div className="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 text-3xl">
+                  <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 text-2xl sm:text-3xl">
                     📩
                   </div>
-                  <h2 className="text-xl font-bold">Verify your email</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-lg sm:text-xl font-bold">Verify your email</h2>
+                  <p className="text-gray-600 text-sm break-all">
                     Code sent to <b>{formData.email}</b>
                   </p>
                 </div>
 
                 {/* OTP BOXES */}
-                <div className="flex justify-center gap-2 mb-4">
+                <div className="flex justify-center gap-1 sm:gap-2 mb-4">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -594,7 +594,7 @@ const Login = () => {
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
-                      className="w-12 h-12 text-xl text-center font-bold border-2 rounded-lg"
+                      className="w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl text-center font-bold border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       value={digit}
                       disabled={otpLoading}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
@@ -640,13 +640,13 @@ const Login = () => {
 
           {/* FOOTER */}
           <div className="text-center mt-6 space-y-3">
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               Don't have an account?{" "}
               <Link to="/register" className="text-blue-600 font-medium hover:underline">
                 Create account
               </Link>
             </p>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               <Link to="/forgot-password" className="text-orange-600 font-medium hover:underline">
                 Forgot your password?
               </Link>

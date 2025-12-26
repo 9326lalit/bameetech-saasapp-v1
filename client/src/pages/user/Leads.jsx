@@ -7,6 +7,7 @@ import {
   Activity, Target, Clock, BarChart3, ArrowLeft, Shield
 } from 'lucide-react';
 import Layout from '../../components/Layout';
+import ReadMore from '../../components/ReadMore';
 import { getUserLeadsOverview, getPlanLeads } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -460,7 +461,7 @@ const UserLeads = () => {
 
     return (
       <Layout title={`${leadStats.planName} - Leads`}>
-        <div className="max-w-[1600px] mx-auto px-6 py-6 leads-protected-content" style={{ 
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6 leads-protected-content" style={{ 
           userSelect: 'none', 
           WebkitUserSelect: 'none', 
           MozUserSelect: 'none', 
@@ -568,22 +569,22 @@ const UserLeads = () => {
         </div>
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => navigate('/leads')}
-            className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
+            className="flex items-center text-blue-600 hover:text-blue-700 mb-3 sm:mb-4 text-sm sm:text-base"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to All Plans
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Leads Management</h1>
-          <p className="text-gray-600">Manage and track your business opportunities</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Leads Management</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Manage and track your business opportunities</p>
         </div>
 
         {/* Lead Tables Tabs */}
         {availableLeadTables.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Select Lead Database
@@ -597,7 +598,7 @@ const UserLeads = () => {
                 <button
                   key={table}
                   onClick={() => handleTableChange(table)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                     selectedTable === table
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -611,41 +612,41 @@ const UserLeads = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="bg-blue-50 rounded-lg p-2"><Users className="h-5 w-5 text-blue-600" /></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="bg-white rounded-lg p-3 sm:p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="bg-blue-50 rounded-lg p-1.5 sm:p-2"><Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" /></div>
               <span className="text-xs text-gray-500 font-medium">Total</span>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Available Leads</p>
-            <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Available Leads</p>
+            <p className="text-lg sm:text-2xl font-bold text-gray-900">{leads.length}</p>
           </div>
 
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="bg-green-50 rounded-lg p-2"><Target className="h-5 w-5 text-green-600" /></div>
+          <div className="bg-white rounded-lg p-3 sm:p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="bg-green-50 rounded-lg p-1.5 sm:p-2"><Target className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" /></div>
               <span className="text-xs text-gray-500 font-medium">Fresh</span>
             </div>
-            <p className="text-sm text-gray-600 mb-1">New Leads</p>
-            <p className="text-2xl font-bold text-gray-900">{leads.filter(l => l.status === 'new').length}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">New Leads</p>
+            <p className="text-lg sm:text-2xl font-bold text-gray-900">{leads.filter(l => l.status === 'new').length}</p>
           </div>
 
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="bg-purple-50 rounded-lg p-2"><BarChart3 className="h-5 w-5 text-purple-600" /></div>
+          <div className="bg-white rounded-lg p-3 sm:p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="bg-purple-50 rounded-lg p-1.5 sm:p-2"><BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" /></div>
               <span className="text-xs text-gray-500 font-medium">Quality</span>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Qualified</p>
-            <p className="text-2xl font-bold text-gray-900">{leads.filter(l => l.status === 'qualified').length}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Qualified</p>
+            <p className="text-lg sm:text-2xl font-bold text-gray-900">{leads.filter(l => l.status === 'qualified').length}</p>
           </div>
 
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="bg-orange-50 rounded-lg p-2"><Clock className="h-5 w-5 text-orange-600" /></div>
+          <div className="bg-white rounded-lg p-3 sm:p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="bg-orange-50 rounded-lg p-1.5 sm:p-2"><Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" /></div>
               <span className="text-xs text-gray-500 font-medium">Days</span>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Plan Expires</p>
-            <p className="text-2xl font-bold text-gray-900">{daysLeft || 0}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Plan Expires</p>
+            <p className="text-lg sm:text-2xl font-bold text-gray-900">{daysLeft || 0}</p>
           </div>
         </div>
 
@@ -695,7 +696,7 @@ const UserLeads = () => {
         )}
 
         {/* Search & Filter */}
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200 flex flex-col lg:flex-row gap-3">
+        <div className="bg-white rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm border border-gray-200 flex flex-col gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -706,7 +707,7 @@ const UserLeads = () => {
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center sm:justify-start">
             <span className="text-xs text-gray-500">
               Showing {getDynamicColumns.length} field{getDynamicColumns.length !== 1 ? 's' : ''}
             </span>
@@ -715,28 +716,28 @@ const UserLeads = () => {
 
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-gray-900">Lead Directory</h2>
-            <p className="text-sm text-gray-600">
+          <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900">Lead Directory</h2>
+            <p className="text-xs sm:text-sm text-gray-600">
               Showing {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLeads.length)} of {filteredLeads.length}
             </p>
           </div>
 
           {currentLeads.length ? (
             <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="mobile-scroll">
+                <table className="mobile-table">
                   <thead className="bg-gray-50">
                     <tr>
                       {getDynamicColumns.map(field => (
                         <th
                           key={field}
-                          className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                           onClick={() => handleSort(field)}
                         >
                           <div className="flex items-center space-x-1">
-                            <span>{formatFieldName(field)}</span>
-                            <ArrowUpDown className="h-3 w-3" />
+                            <span className="truncate">{formatFieldName(field)}</span>
+                            <ArrowUpDown className="h-3 w-3 flex-shrink-0" />
                           </div>
                         </th>
                       ))}
@@ -746,20 +747,22 @@ const UserLeads = () => {
                     {currentLeads.map((lead, index) => (
                       <tr key={lead.id || index} className="hover:bg-gray-50 transition-colors">
                         {getDynamicColumns.map(field => (
-                          <td key={field} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <td key={field} className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700">
                             {field.toLowerCase().includes('name') && lead[field] ? (
-                              <div className="flex items-center">
-                                <div className="h-9 w-9 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <span className="text-blue-700 font-semibold text-sm">
+                              <div className="flex items-center min-w-0">
+                                <div className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <span className="text-blue-700 font-semibold text-xs sm:text-sm">
                                     {String(lead[field]).charAt(0).toUpperCase()}
                                   </span>
                                 </div>
-                                <div className="ml-3">
-                                  <p className="text-sm font-semibold text-gray-900">{lead[field]}</p>
+                                <div className="ml-2 sm:ml-3 min-w-0 flex-1">
+                                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{lead[field]}</p>
                                 </div>
                               </div>
                             ) : (
-                              renderCellValue(field, lead[field])
+                              <div className="min-w-0">
+                                {renderCellValue(field, lead[field])}
+                              </div>
                             )}
                           </td>
                         ))}
@@ -771,17 +774,19 @@ const UserLeads = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-                  <div className="text-sm text-gray-600">Page {currentPage} of {totalPages}</div>
-                  <div className="flex items-center space-x-2">
+                <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+                  <div className="text-xs sm:text-sm text-gray-600">Page {currentPage} of {totalPages}</div>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
-                    <div className="flex items-center space-x-1">
+                    <div className="hidden sm:flex items-center space-x-1">
                       {[...Array(totalPages)].map((_, idx) => {
                         const pageNum = idx + 1;
                         if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
@@ -801,19 +806,21 @@ const UserLeads = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden">Next</span>
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                     </button>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            <div className="py-12 text-center">
-              <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Leads Found</h3>
-              <p className="text-sm text-gray-600">Try adjusting your search or filter criteria</p>
+            <div className="py-8 sm:py-12 text-center">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">No Leads Found</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Try adjusting your search or filter criteria</p>
             </div>
           )}
         </div>
@@ -825,74 +832,81 @@ const UserLeads = () => {
   // All plans overview
   return (
     <Layout title="Leads Management">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Leads Management</h1>
-          <p className="text-gray-600">Select a plan to access its leads</p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Leads Management</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Select a plan to access its leads</p>
         </div>
 
         {allLeadsOverview.length === 0 ? (
-          <div className="text-center py-16">
-            <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Subscriptions</h3>
-            <p className="text-gray-600 mb-6">Subscribe to a plan to access leads</p>
+          <div className="text-center py-12 sm:py-16">
+            <Package className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No Active Subscriptions</h3>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">Subscribe to a plan to access leads</p>
             <button
               onClick={() => navigate('/subscription-plans')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="mobile-button btn-primary"
             >
               Browse Plans
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mobile-grid">
             {allLeadsOverview.map((overview) => {
               const daysLeft = calculateDaysRemaining(overview.endDate);
               const hasLeadAccess = overview.hasLeadAccess;
 
               return (
-                <div key={overview.subscriptionId} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{overview.planName}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{overview.planDescription}</p>
+                <div key={overview.subscriptionId} className="mobile-card hover:shadow-lg transition-shadow">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{overview.planName}</h3>
+                      {overview.planDescription && (
+                        <ReadMore 
+                          maxLength={80}
+                          className="text-xs sm:text-sm text-gray-600 mt-1"
+                        >
+                          {overview.planDescription}
+                        </ReadMore>
+                      )}
                     </div>
-                    <div className="flex items-center text-green-600">
+                    <div className="flex items-center text-green-600 flex-shrink-0">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       <span className="text-xs font-medium">ACTIVE</span>
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 sm:space-y-3 mb-4">
                     {overview.leadDatabase && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Database className="h-4 w-4 mr-2" />
-                        {overview.leadDatabase.name}
+                      <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                        <Database className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{overview.leadDatabase.name}</span>
                       </div>
                     )}
 
                     {overview.leadLimit && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2" />
-                        Lead Limit: {overview.leadLimit.toLocaleString()}
+                      <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                        <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span>Lead Limit: {overview.leadLimit.toLocaleString()}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="text-sm text-gray-500 mb-4">
+                  <div className="text-xs sm:text-sm text-gray-500 mb-4 space-y-1">
                     <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Valid until {formatDate(overview.endDate)}
+                      <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="truncate">Valid until {formatDate(overview.endDate)}</span>
                     </div>
-                    <div className="flex items-center mt-1">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {daysLeft} days remaining
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span>{daysLeft} days remaining</span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => navigate(`/leads/plan/${overview.planId}`)}
                     disabled={!hasLeadAccess}
-                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${hasLeadAccess
+                    className={`mobile-button font-medium transition-colors ${hasLeadAccess
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       }`}
