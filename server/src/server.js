@@ -19,10 +19,14 @@ const app = express();
 //   credentials: true
 // }));
 app.use(cors({
-  origin: [
+    origin: [
     "https://dashboard.bameetech.in",
     "http://localhost:5173",
-    "http://localhost:5174"
+    "http://localhost:5174",
+    "https://bameetech.in/",
+    "https://bindhastkatta.com/",
+    "https://balajikanthekar.com/",
+    "https://cornflowerblue-curlew-414242.hostingersite.com"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
