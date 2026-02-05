@@ -23,9 +23,9 @@ app.use(cors({
     "https://dashboard.bameetech.in",
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://bameetech.in/",
-    "https://bindhastkatta.com/",
-    "https://balajikanthekar.com/",
+    "https://bameetech.in",
+    "https://bindhastkatta.com",
+    "https://balajikanthekar.com",
     "https://cornflowerblue-curlew-414242.hostingersite.com"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
