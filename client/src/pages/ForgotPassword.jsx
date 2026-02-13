@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { resetPassword } from '../services/api';
 import axios from 'axios';
 import Logo from '../components/Logo';
-import { ArrowLeft, Mail, Lock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, CheckCircle, EyeOff, Eye } from 'lucide-react';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password, 4: Success
@@ -14,6 +14,25 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+
+const getPasswordStrength = (password) => {
+  if (password.length < 6) return "Weak";
+  if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/))
+    return "Strong";
+  return "Medium";
+};
+
+const strengthColor = {
+  Weak: "bg-red-500",
+  Medium: "bg-yellow-500",
+  Strong: "bg-green-500",
+};
+
+
   const otpInputs = useRef([]);
   const navigate = useNavigate();
 
@@ -291,63 +310,134 @@ const ForgotPassword = () => {
 
           {/* Step 3: New Password */}
           {step === 3 && (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="password"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    placeholder="Enter new password (min. 6 characters)"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </div>
+  <form onSubmit={handleResetPassword} className="space-y-6">
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="password"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    placeholder="Confirm your new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </div>
+    {/* 🔐 New Password */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        New Password
+      </label>
 
-              <button
-                type="submit"
-                className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="loading-spinner mr-2"></div>
-                    Resetting Password...
-                  </div>
-                ) : (
-                  'Reset Password'
-                )}
-              </button>
-            </form>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Lock className="h-5 w-5 text-gray-400" />
+        </div>
+
+        <input
+          type={showNewPassword ? "text" : "password"}
+          className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+          minLength={6}
+        />
+
+        <div
+          className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+          onClick={() => setShowNewPassword(!showNewPassword)}
+        >
+          {showNewPassword ? (
+            <EyeOff className="h-5 w-5 text-gray-500 hover:text-orange-500 transition-colors" />
+          ) : (
+            <Eye className="h-5 w-5 text-gray-500 hover:text-orange-500 transition-colors" />
           )}
+        </div>
+      </div>
+
+      {/* 🔥 Password Strength */}
+      {newPassword && (
+        <div className="mt-2">
+          <div className="w-full h-2 bg-gray-200 rounded">
+            <div
+              className={`h-2 rounded ${strengthColor[getPasswordStrength(newPassword)]}`}
+              style={{
+                width:
+                  getPasswordStrength(newPassword) === "Weak"
+                    ? "33%"
+                    : getPasswordStrength(newPassword) === "Medium"
+                    ? "66%"
+                    : "100%",
+              }}
+            ></div>
+          </div>
+          <p className="text-sm mt-1 text-gray-600">
+            Strength: {getPasswordStrength(newPassword)}
+          </p>
+        </div>
+      )}
+    </div>
+
+    {/* 🔐 Confirm Password */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Confirm Password
+      </label>
+
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Lock className="h-5 w-5 text-gray-400" />
+        </div>
+
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          className={`w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 outline-none ${
+            confirmPassword &&
+            (confirmPassword === newPassword
+              ? "border-green-500 focus:ring-green-500"
+              : "border-red-500 focus:ring-red-500")
+          }`}
+          placeholder="Confirm your new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          minLength={6}
+        />
+
+        <div
+          className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+          onClick={() =>
+            setShowConfirmPassword(!showConfirmPassword)
+          }
+        >
+          {showConfirmPassword ? (
+            <EyeOff className="h-5 w-5 text-gray-500 hover:text-orange-500 transition-colors" />
+          ) : (
+            <Eye className="h-5 w-5 text-gray-500 hover:text-orange-500 transition-colors" />
+          )}
+        </div>
+      </div>
+
+      {/* ✅ Match / ❌ Error */}
+      {confirmPassword && (
+        <p
+          className={`text-sm mt-2 ${
+            confirmPassword === newPassword
+              ? "text-green-600"
+              : "text-red-600"
+          }`}
+        >
+          {confirmPassword === newPassword
+            ? "Passwords match ✔"
+            : "Passwords do not match"}
+        </p>
+      )}
+    </div>
+
+    {/* 🔘 Submit Button */}
+    <button
+      type="submit"
+      disabled={
+        loading ||
+        newPassword !== confirmPassword ||
+        newPassword.length < 6
+      }
+      className="w-full py-3 text-base bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
+    >
+      {loading ? "Resetting Password..." : "Reset Password"}
+    </button>
+  </form>
+)}
 
           {/* Step 4: Success */}
           {step === 4 && (
