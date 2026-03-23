@@ -917,7 +917,7 @@ const UserLeads = () => {
                   <div className="text-xs sm:text-sm text-gray-500 mb-4 space-y-1">
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="truncate">Valid until {formatDate(overview.endDate)}</span>
+                      <span className="truncate">Valid until {formatDateTime(overview.endDate)}</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
