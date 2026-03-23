@@ -29,6 +29,18 @@ const Lead = sequelize.define('Lead', {
   notes: {
     type: DataTypes.TEXT,
   },
+   createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+}, {
+  timestamps: true,
 });
 
 module.exports = Lead;
